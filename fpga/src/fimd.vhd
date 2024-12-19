@@ -15,7 +15,7 @@ LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 USE ieee.numeric_std.ALL;	   	
 
-ENTITY imd IS 	  
+ENTITY fimd IS 	  
 	GENERIC
 	(	
 		g_BUFFER_ROWS 	: NATURAL	:= 9;                    
@@ -40,11 +40,11 @@ ENTITY imd IS
 	);
 END ENTITY;											 
 
-ARCHITECTURE rtl OF imd IS	 											
+ARCHITECTURE rtl OF fimd IS	 											
     SUBTYPE t_PIX_INT 		IS INTEGER RANGE 0 TO 2**g_PIX_BITS-1;
     SUBTYPE t_SHIFT_INT 	IS INTEGER RANGE 0 TO 2*g_BUFFER_ROWS;
 	SUBTYPE t_FSM_INT		IS INTEGER RANGE -g_RADIUS TO g_RADIUS;
-	SUBTYPE t_FSM_DEC_INT	IS INTEGER RANGE -4*g_RADIUS TO 4*g_RADIUS;
+	SUBTYPE t_FSM_DEC_INT	IS INTEGER RANGE -40*g_RADIUS TO 40*g_RADIUS;
 
     TYPE t_ARR_PIX_INT 	 IS ARRAY(NATURAL RANGE <>) OF t_PIX_INT;	 
     TYPE t_ARR_SHIFT_INT IS ARRAY(NATURAL RANGE <>) OF t_SHIFT_INT;	  
@@ -62,9 +62,9 @@ ARCHITECTURE rtl OF imd IS
     SIGNAL r_CENTER_ARR      : t_ARR_PIX_INT(0 TO 2*g_RADIUS)   := (OTHERS => 0);
     SIGNAL r_MAX_BOUND_ARR   : t_ARR_PIX_INT(0 TO 2*g_RADIUS)   := (OTHERS => 0);
     SIGNAL r_MIN_BOUND_ARR   : t_ARR_PIX_INT(0 TO 2*g_RADIUS)   := (OTHERS => t_PIX_INT'HIGH);
-    SIGNAL r_MAX_INT_ARR     : t_ARR_PIX_INT(0 TO 2*g_RADIUS)   := (OTHERS => 0);
-    SIGNAL r_MAX_INT_COL_ARR : t_ARR_SHIFT_INT(0 TO 2*g_RADIUS) := (OTHERS => 0);
-    SIGNAL r_MAX_INT_ROW_ARR : t_ARR_SHIFT_INT(0 TO 2*g_RADIUS) := (OTHERS => 0);
+    --SIGNAL r_MAX_INT_ARR     : t_ARR_PIX_INT(0 TO 2*g_RADIUS)   := (OTHERS => 0);
+    --SIGNAL r_MAX_INT_COL_ARR : t_ARR_SHIFT_INT(0 TO 2*g_RADIUS) := (OTHERS => 0);
+    --SIGNAL r_MAX_INT_ROW_ARR : t_ARR_SHIFT_INT(0 TO 2*g_RADIUS) := (OTHERS => 0);
 												  		 
 	
     PROCEDURE f_GET_COL_INDEX (
@@ -183,7 +183,7 @@ ARCHITECTURE rtl OF imd IS
     END PROCEDURE;
 									   
 BEGIN
-	p_FAST : PROCESS (i_CLOCK, i_NRST) IS														
+	p_FIMD : PROCESS (i_CLOCK, i_NRST) IS														
         VARIABLE v_COL_SHIFT   : t_SHIFT_INT := 0;
         VARIABLE v_ROW_INDEX   : t_SHIFT_INT := 0;
         VARIABLE v_COL_INDEX   : t_SHIFT_INT := 0;
@@ -306,7 +306,7 @@ BEGIN
                     --v_MAX_INT_COL   := r_MAX_INT_COL_ARR(v_COL_SHIFT);
                     --v_MAX_INT_ROW   := r_MAX_INT_ROW_ARR(v_COL_SHIFT); 	
 					
-                    -- process FAST algorithm
+                    -- decide about detections
                     IF v_CENTER_VAL > i_THRESHOLD THEN
                         IF v_MAX_BOUND_VAL <= v_CENTER_VAL AND (v_CENTER_VAL - v_MAX_BOUND_VAL) >= i_THRESHOLD_DIFF THEN
                             r_MARKER_POT       <= '1';
