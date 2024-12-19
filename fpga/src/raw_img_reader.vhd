@@ -1,9 +1,10 @@
-																															   ---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+--
 -- Title       : raw_img_reader
 -- Design      : FIMD
 -- Author      : vrba.vojtech [at] fel.cvut.cz
 -- Company     : Czech Technical University in Prague
---						
+--                        
 -------------------------------------------------------------------------------
 --
 -- Description : Entity for reading binary images, simulates HW parallel interface.
@@ -18,13 +19,15 @@ LIBRARY std;
 USE std.textio.ALL;
 
 ENTITY raw_img_reader IS
-    GENERIC (
+    GENERIC
+    (
         g_FILENAME   : STRING;
         g_IMG_WIDTH  : INTEGER RANGE 0 TO 1024;
         g_IMG_HEIGHT : INTEGER RANGE 0 TO 1024;
         g_RST_ACTIVE : STD_LOGIC := '0'
     );
-    PORT (
+    PORT
+    (
         i_CLOCK : IN STD_LOGIC;
         i_RESET : IN STD_LOGIC;
         o_POS_X : OUT STD_LOGIC_VECTOR(15 DOWNTO 0) := (OTHERS => '0');
@@ -45,15 +48,15 @@ ARCHITECTURE rtl OF raw_img_reader IS
 
 BEGIN
     read_file : PROCESS (i_RESET, i_CLOCK) IS
-        VARIABLE v_CHAR   : CHARACTER;
-        VARIABLE v_POS_X  : INTEGER RANGE -1 TO 1024;
-        VARIABLE v_POS_Y  : INTEGER RANGE 0 TO 1024;
+        VARIABLE v_CHAR  : CHARACTER;
+        VARIABLE v_POS_X : INTEGER RANGE -1 TO 1024;
+        VARIABLE v_POS_Y : INTEGER RANGE 0 TO 1024;
     BEGIN
         IF i_RESET = g_RST_ACTIVE THEN
-            o_DATA   <= (OTHERS => '0');
-            o_POS_X  <= (OTHERS => '0');
-            o_POS_Y  <= (OTHERS => '0');
-            r_DONE   <= '0';
+            o_DATA  <= (OTHERS => '0');
+            o_POS_X <= (OTHERS => '0');
+            o_POS_Y <= (OTHERS => '0');
+            r_DONE  <= '0';
             IF r_VALID = '1' THEN
                 file_close(r_FILE);
                 r_VALID <= '0';

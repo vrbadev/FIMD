@@ -1,9 +1,10 @@
-																															   ---------------------------------------------------------------------------------
+-------------------------------------------------------------------------------
+--
 -- Title       : ram_sim
 -- Design      : FIMD
 -- Author      : vrba.vojtech [at] fel.cvut.cz
 -- Company     : Czech Technical University in Prague
---						
+--                        
 -------------------------------------------------------------------------------
 --
 -- Description : Entity for simulation of Block RAM memory.
@@ -33,8 +34,8 @@ ARCHITECTURE rtl OF ram_sim IS
     SUBTYPE t_WORD IS STD_LOGIC_VECTOR (g_DATA_LEN - 1 DOWNTO 0);
     TYPE t_MEMORY IS ARRAY (0 TO g_SIZE - 1) OF t_WORD;
 
-    SIGNAL r_MEMORY : t_MEMORY 	:= (OTHERS => (OTHERS => '0'));
-    SIGNAL r_DATA 	: t_WORD    := (OTHERS => '0');
+    SIGNAL r_MEMORY : t_MEMORY     := (OTHERS => (OTHERS => '0'));
+    SIGNAL r_DATA     : t_WORD    := (OTHERS => '0');
 BEGIN
     PROCESS (i_CLOCK) IS
         VARIABLE v_ADDRESS : INTEGER := 0;
