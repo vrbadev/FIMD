@@ -5,4 +5,4 @@ add_subdirectory(cpu)
 add_subdirectory(gpu)
 
 add_custom_target(${PROJECT_NAME})
-add_dependencies(${PROJECT_NAME} cpu gpu)
+add_dependencies(${PROJECT_NAME} fimd_cpu gpu)
