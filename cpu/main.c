@@ -47,19 +47,39 @@ int main(int argc, char *argv[]) {
 
     memcpy(tmp, image_data, image_size);
     fimd_r2(tmp, markers, &markers_num, sun_pts, &sun_pts_num);
-    printf("FIMD-CPU r=2: detected %d markers, %d sun points.\n", markers_num, sun_pts_num);
+    printf("FIMD-CPU r=2: detected %d markers, %d sun points.\nMarkers: [", markers_num, sun_pts_num);
+    for (int i = 0; i < markers_num; i++) {
+        uintptr_t pos1d = markers[i] - ((uintptr_t) tmp);
+        printf("(%lu,%lu),", pos1d / IM_WIDTH, pos1d % IM_WIDTH);
+    }
+    printf("\b]\n");
 
     memcpy(tmp, image_data, image_size);
     fimd_r3(tmp, markers, &markers_num, sun_pts, &sun_pts_num);
-    printf("FIMD-CPU r=3: detected %d markers, %d sun points.\n", markers_num, sun_pts_num);
+    printf("FIMD-CPU r=3: detected %d markers, %d sun points.\nMarkers: [", markers_num, sun_pts_num);
+    for (int i = 0; i < markers_num; i++) {
+        uintptr_t pos1d = markers[i] - ((uintptr_t) tmp);
+        printf("(%lu,%lu),", pos1d / IM_WIDTH, pos1d % IM_WIDTH);
+    }
+    printf("\b]\n");
 
     memcpy(tmp, image_data, image_size);
     fimd_r4(tmp, markers, &markers_num, sun_pts, &sun_pts_num);
-    printf("FIMD-CPU r=4: detected %d markers, %d sun points.\n", markers_num, sun_pts_num);
+    printf("FIMD-CPU r=4: detected %d markers, %d sun points.\nMarkers: [", markers_num, sun_pts_num);
+    for (int i = 0; i < markers_num; i++) {
+        uintptr_t pos1d = markers[i] - ((uintptr_t) tmp);
+        printf("(%lu,%lu),", pos1d / IM_WIDTH, pos1d % IM_WIDTH);
+    }
+    printf("\b]\n");
 
     memcpy(tmp, image_data, image_size);
     fimd_r5(tmp, markers, &markers_num, sun_pts, &sun_pts_num);
-    printf("FIMD-CPU r=5: detected %d markers, %d sun points.\n", markers_num, sun_pts_num);
+    printf("FIMD-CPU r=5: detected %d markers, %d sun points.\nMarkers: [", markers_num, sun_pts_num);
+    for (int i = 0; i < markers_num; i++) {
+        uintptr_t pos1d = markers[i] - ((uintptr_t) tmp);
+        printf("(%lu,%lu),", pos1d / IM_WIDTH, pos1d % IM_WIDTH);
+    }
+    printf("\b]\n");
 
     free(tmp);
     free(image_data);
