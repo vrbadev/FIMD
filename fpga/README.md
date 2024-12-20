@@ -65,4 +65,5 @@ run
 # EXECUTION:: FAILURE: Done, all vectors tested...
 # EXECUTION:: Time: 27128550 ns,  Iteration: 0,  Instance: /testbench,  Process: p_TEST.
 # KERNEL: Stopped at time 27128550 ns + 0.
-``` 
+```
+(Detections represent all pixels that pass segment tests.) 
