@@ -1,8 +1,10 @@
-/// \file compute_lib.c
-/// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
-/// \date May 2023
-/// \brief Main implementation of the GLES3ComputeLib library.
-/// \copyright GNU Public License.
+/*
+ * \file compute_lib.c
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Source file for the compute shader library.
+ * \copyright GNU Public License.
+ */
 
 #include "compute_lib.h"
 

@@ -1,3 +1,11 @@
+/*
+ * \file fimd_cpu.c
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Source file for the FIMD-CPU library.
+ * \copyright GNU Public License.
+ */
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>

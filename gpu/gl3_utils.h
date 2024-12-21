@@ -1,8 +1,11 @@
-/// \file gl3_utils.h
-/// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
-/// \date May 2023
-/// \brief This header file contains auxiliary functions and structs definitions extending OpenGL ES3.X.
-/// \copyright GNU Public License.
+/*
+ * \file gl3_utils.h
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Header file with auxiliary functions for OpenGL ES3.
+ * \copyright GNU Public License.
+ */
+
 
 #pragma once
 

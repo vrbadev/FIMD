@@ -1,8 +1,10 @@
-/// \file gl3_utils.c
-/// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
-/// \date May 2023
-/// \brief This file implements auxiliary functions extending OpenGL ES3.2.
-/// \copyright GNU Public License.
+/*
+ * \file gl3_utils.c
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Source file with auxiliary functions for OpenGL ES3.
+ * \copyright GNU Public License.
+ */
 
 #include "gl3_utils.h"
 

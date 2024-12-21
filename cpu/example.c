@@ -1,3 +1,11 @@
+/*
+ * \file example.c
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Source file for the FIMD-CPU example application.
+ * \copyright GNU Public License.
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 

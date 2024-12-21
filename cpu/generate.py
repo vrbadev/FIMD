@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Created on Fri Dec 20 12:42:07 2024
-@author: Vojtech Vrba (vrba.vojtech@fel.cvut.cz)
+@author: Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
 
 Script for generation of FIMD-CPU approach using templates.
 """

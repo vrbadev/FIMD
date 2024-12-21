@@ -1,3 +1,11 @@
+/*
+ * \file fimd_cpu.h
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Header file for the FIMD-CPU library.
+ * \copyright GNU Public License.
+ */
+
 #ifndef FIMD_CPU_H
 #define FIMD_CPU_H
 

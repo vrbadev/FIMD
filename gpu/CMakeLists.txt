@@ -64,7 +64,7 @@ foreach(SHADER_FILE_PATH ${SHADER_FILES_PATHS})
     math(EXPR index "${index}+1")
 endforeach()
 
-target_sources(${PROJECT_NAME} PRIVATE ${SHADER_OBJECTS} gpu.c gl3_utils.c queue.c compute_lib.c)
+target_sources(${PROJECT_NAME} PRIVATE ${SHADER_OBJECTS} fimd_gpu.c gl3_utils.c queue.c compute_lib.c)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${EGL_LIBRARIES} ${GBM_LIBRARIES} ${GLES_LIBRARIES})
 

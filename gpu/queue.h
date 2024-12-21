@@ -1,8 +1,10 @@
-/// \file queue.h
-/// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
-/// \date May 2023
-/// \brief This header file contains definitions for simple dynamicly allocated circular queue of pointers.
-/// \copyright GNU Public License.
+/*
+ * \file queue.h
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Header file for implementation of simple dynamically allocated circular queue of pointers.
+ * \copyright GNU Public License.
+ */
 
 #pragma once
 

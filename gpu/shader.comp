@@ -1,3 +1,11 @@
+/*
+ * \file shader.comp
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Compute shader template file for the FIMD-GPU implementation.
+ * \copyright GNU Public License.
+ */
+
 #version 310 es
 
 #define FAST_THRESHOLD %d

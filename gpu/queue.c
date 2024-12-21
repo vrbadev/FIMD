@@ -1,8 +1,10 @@
-/// \file queue.c
-/// \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
-/// \date May 2023
-/// \brief Implementation of simple dynamically allocated circular queue of pointers.
-/// \copyright GNU Public License.
+/*
+ * \file queue.c
+ * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \date December 2024
+ * \brief Source file for implementation of simple dynamically allocated circular queue of pointers.
+ * \copyright GNU Public License.
+ */
 
 #include "queue.h"
 
