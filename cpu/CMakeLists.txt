@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED OFF)
 set(CMAKE_C_EXTENSIONS OFF)
 
-add_compile_options(-O3 -g -save-temps)
+add_compile_options(-O3 -g) # -save-temps
 
 set(IM_WIDTH 752)
 set(IM_HEIGHT 480)
@@ -29,7 +29,16 @@ file(REAL_PATH "${PROJECT_SOURCE_DIR}/generate.py" GEN_SCRIPT_PATH)
 file(REAL_PATH "${PROJECT_SOURCE_DIR}/template.c" TEMPLATE_PATH)
 
 message("[Code generation for FIMD-CPU]")
-set(FIMD_RADII 2 3 4 5)  # Predefined set of radii
+
+set(FIMD_RADII)  # Predefined set of radii
+foreach(RADIUS RANGE 2 5 1)
+    list(APPEND FIMD_RADII ${RADIUS})
+endforeach()
+string(JOIN "," FIMD_RADII_STR ${FIMD_RADII})
+message(" -- radii: ${FIMD_RADII_STR}")
+
+add_compile_definitions(FIMD_RADII=${FIMD_RADII_STR})
+
 set(GENERATED_SOURCES)
 
 foreach(FIMD_RADIUS IN LISTS FIMD_RADII)
@@ -45,6 +54,12 @@ foreach(FIMD_RADIUS IN LISTS FIMD_RADII)
     list(APPEND GENERATED_SOURCES ${GEN_SOURCE_PATH})
 endforeach()
 
-# Target: Library archive file
-add_executable(${PROJECT_NAME} main.c ${GENERATED_SOURCES})
+message("[Code generation done]")
+
+# Target: Shared library (libfimd_cpu.so)
+add_library(${PROJECT_NAME} SHARED fimd_cpu.c ${GENERATED_SOURCES})
+
+# Target: Executable example (fimd_cpu_example)
+add_executable(${PROJECT_NAME}_example example.c ${PROJECT_NAME})
+target_link_libraries(${PROJECT_NAME}_example ${PROJECT_NAME})
 

@@ -12,10 +12,6 @@
 //$ GEN_OUTPUT.append("""
 uint8_t* FIMD_FUNC(uint8_t* img_ptr, uintptr_t* markers, uint32_t* markers_num, uintptr_t* sun_pts, uint32_t* sun_pts_num)
 {
-    // initialize variables
-    *markers_num = 0;
-    *sun_pts_num = 0;
-
     // append termination sequence to image end
     *((uint16_t*) ((img_ptr) + (IM_WIDTH * IM_HEIGHT) - 2)) = FIMD_TERM_SEQ;
 
