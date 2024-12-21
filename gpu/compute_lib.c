@@ -414,7 +414,7 @@ GLuint compute_lib_program_print_resources(compute_lib_program_t* program, FILE*
     for (i = 0; i < count; i++) {
         glGetProgramResourceName(program->handle, GL_SHADER_STORAGE_BLOCK, i, name_max_len, &name_len, name);
         index = glGetProgramResourceIndex(program->handle, GL_SHADER_STORAGE_BLOCK, name);
-        glGetProgramResourceiv(program->handle, GL_SHADER_STORAGE_BLOCK, index, 1, &binding_prop, sizeof(binding), NULL, &binding);
+        glGetProgramResourceiv(program->handle, GL_SHADER_STORAGE_BLOCK, index, 1, &binding_prop, sizeof(binding), NULL, (GLint*) &binding);
         fprintf(out, "SSBO #%d: Index: %d Name: %.*s Binding: %d\r\n", i, index, name_len, name, binding);
     }
 
@@ -856,7 +856,7 @@ GLuint compute_lib_uniform_init(compute_lib_program_t* program, compute_lib_unif
 {
     glGetUniformIndices(program->handle, 1, (const GLchar **) &(uniform->name), &(uniform->index));
     uniform->location = glGetUniformLocation(program->handle, uniform->name);
-    glGetActiveUniform(program->handle, uniform->index, 0, NULL, &(uniform->size), &(uniform->type), NULL);
+    glGetActiveUniform(program->handle, uniform->index, 0, NULL, (GLint*) &(uniform->size), &(uniform->type), NULL);
     return compute_lib_gl_errors_count();
 }
 

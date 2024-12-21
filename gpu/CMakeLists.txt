@@ -68,3 +68,7 @@ target_sources(${PROJECT_NAME} PRIVATE ${SHADER_OBJECTS} fimd_gpu.c gl3_utils.c 
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${EGL_LIBRARIES} ${GBM_LIBRARIES} ${GLES_LIBRARIES})
 
+# Target: Executable example (fimd_gpu_example)
+add_executable(${PROJECT_NAME}_example example.c)
+target_link_libraries(${PROJECT_NAME}_example ${PROJECT_NAME})
+
