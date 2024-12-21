@@ -11,6 +11,8 @@
 
 MAP(FIMD_FN_TEMPLATE, EMPTY, FIMD_RADII)
 
+const uint32_t fimd_radii_list[FIMD_RADII_COUNT] = { FIMD_RADII };
+
 
 int fimd_cpu_detect(unsigned radius, const unsigned char* img_ptr, unsigned markers[][2], unsigned* markers_num, unsigned sun_pts[][2], unsigned* sun_pts_num)
 {
@@ -49,4 +51,48 @@ int fimd_cpu_detect(unsigned radius, const unsigned char* img_ptr, unsigned mark
     free(tmp);
     return 0;
 }
+
+const unsigned fimd_cpu_image_width() {
+    return IM_WIDTH;
+}
+
+const unsigned fimd_cpu_image_height() {
+    return IM_HEIGHT;
+}
+
+const unsigned fimd_cpu_get_radii_count() {
+    return FIMD_RADII_COUNT;
+}
+
+const unsigned* fimd_cpu_get_radii() {
+    return fimd_radii_list;
+}
+
+const unsigned fimd_cpu_get_max_markers_count() {
+    return FIMD_MAX_MARKERS_COUNT;
+}
+
+const unsigned fimd_cpu_get_max_sun_points_count() {
+    return FIMD_MAX_SUN_PTS_COUNT;
+}
+
+const unsigned fimd_cpu_get_threshold_marker() {
+    return FIMD_THRESHOLD_CENTER;
+}
+
+const unsigned fimd_cpu_get_threshold_sun() {
+    return FIMD_THRESHOLD_SUN;
+}
+
+const unsigned fimd_cpu_get_threshold_diff() {
+    return FIMD_THRESHOLD_DIFF;
+}
+
+const unsigned fimd_cpu_get_termination_sequence() {
+    return FIMD_TERM_SEQ;
+}
+
+
+
+
 
