@@ -168,15 +168,16 @@ if __name__ == "__main__":
         print("Error: Template file '%s' not found." % args.template)
         exit(1)
 
-    print("Starting", parser.description)
-    print("Selected circle radius:", args.radius)
+    if args.verbose:
+        print("Starting", parser.description)
+        print("Selected circle radius:", args.radius)
     
     boundary, interior = bresenham_circle_points(args.radius)
 
     if args.verbose:
         print("\nGenerated Bresenham circle:")
-        print(" -- Boundary points:", len(boundary))
-        print(" -- Interior points:", len(interior))
+        print("-- Boundary points:", len(boundary))
+        print("-- Interior points:", len(interior))
         print("Visualization:")
         print_circle(boundary, interior)
 
@@ -186,12 +187,13 @@ if __name__ == "__main__":
 
     if args.verbose:
         print("\nPixel evaluation order:")
-        print(" -- Boundary points:", len(FIMD_BOUNDARY))
-        print(" -- Interior points:", len(FIMD_INTERIOR))
+        print("-- Boundary points:", len(FIMD_BOUNDARY))
+        print("-- Interior points:", len(FIMD_INTERIOR))
         print("Visualization:")
         print_circle(FIMD_BOUNDARY, FIMD_INTERIOR)
 
-    print("Generating code using template:", args.template)
+    if args.verbose:
+        print("Generating code using template:", args.template)
 
     template = ""
     with open(args.template, "r") as f:
@@ -205,6 +207,10 @@ if __name__ == "__main__":
     with open(args.output, "w") as f:
         f.write("".join(GEN_OUTPUT))
 
-    print("Written generated code to file:", args.output)
-    print("Script finished.")
+
+    if args.verbose:
+        print("Written generated code to file:", args.output)
+        print("Script finished.")
+    else:
+        print("[Python generator] Finished: Radius: %4d, Boundary length: %4d, Interior length: %4d | Written as: %s" % (FIMD_RADIUS, len(FIMD_BOUNDARY), len(FIMD_INTERIOR), args.output))
 
