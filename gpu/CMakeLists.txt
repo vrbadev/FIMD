@@ -9,7 +9,7 @@ add_compile_definitions(_GNU_SOURCE)
 add_compile_options(-O3)
 
 # Target: Shared library (libfimd_gpu.so)
-add_library(${PROJECT_NAME} STATIC ${SHADER_OBJECTS} gpu.c gl3_utils.c queue.c compute_lib.c)
+add_library(${PROJECT_NAME} STATIC)
 
 message("[Available render devices and cards]")
 file(GLOB RENDER_DEVICES "/dev/dri/renderD*" "/dev/dri/card*")
@@ -64,6 +64,7 @@ foreach(SHADER_FILE_PATH ${SHADER_FILES_PATHS})
     math(EXPR index "${index}+1")
 endforeach()
 
+target_sources(${PROJECT_NAME} PRIVATE ${SHADER_OBJECTS} gpu.c gl3_utils.c queue.c compute_lib.c)
 
 target_link_libraries(${PROJECT_NAME} PUBLIC ${EGL_LIBRARIES} ${GBM_LIBRARIES} ${GLES_LIBRARIES})
 
