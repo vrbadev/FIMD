@@ -7,4 +7,13 @@
     <option name="pythonIntegrationState" value="YES" />
   </component>
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="CidrRootsConfiguration">
+    <sourceRoots>
+      <file path="$PROJECT_DIR$/cpu" />
+      <file path="$PROJECT_DIR$/gpu" />
+    </sourceRoots>
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/fpga" />
+    </excludeRoots>
+  </component>
 </project>

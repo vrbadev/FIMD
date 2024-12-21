@@ -39,7 +39,7 @@ foreach(RADIUS RANGE 1 10 1)
 endforeach()
 string(JOIN "," FIMD_RADII_STR ${FIMD_RADII})
 list(LENGTH FIMD_RADII FIMD_RADII_COUNT)
-message(" -- radii (${FIMD_RADII_COUNT}): ${FIMD_RADII_STR}")
+message("-- radii (${FIMD_RADII_COUNT}): ${FIMD_RADII_STR}")
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE FIMD_RADII=${FIMD_RADII_STR})
 target_compile_definitions(${PROJECT_NAME} PRIVATE FIMD_RADII_COUNT=${FIMD_RADII_COUNT})
@@ -48,7 +48,7 @@ set(GENERATED_SOURCES)
 
 foreach(FIMD_RADIUS IN LISTS FIMD_RADII)
     set(GEN_SOURCE_PATH "${CMAKE_CURRENT_BINARY_DIR}/fimd_r${FIMD_RADIUS}.c")
-    message(" -- radius ${FIMD_RADIUS}: ${TEMPLATE_PATH} -> ${GEN_SOURCE_PATH}")
+    message("-- radius ${FIMD_RADIUS}: ${TEMPLATE_PATH} -> ${GEN_SOURCE_PATH}")
     add_custom_command(
             OUTPUT ${GEN_SOURCE_PATH}
             COMMAND python ${GEN_SCRIPT_PATH} -t ${TEMPLATE_PATH} -o ${GEN_SOURCE_PATH} -r ${FIMD_RADIUS}
