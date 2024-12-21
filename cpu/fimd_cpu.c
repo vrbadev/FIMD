@@ -1,4 +1,4 @@
-/*
+/**
  * \file fimd_cpu.c
  * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
  * \date December 2024

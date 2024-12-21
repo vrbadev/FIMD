@@ -1,4 +1,4 @@
-/*
+/**
  * \file gl3_utils.c
  * \author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
  * \date December 2024

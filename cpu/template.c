@@ -1,4 +1,13 @@
 //$ GEN_OUTPUT.append("""
+/**
+ * \\file fast_r%d.c
+ * \\author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
+ * \\date December 2024
+ * \\brief Generated source file for the FIMD-CPU library.
+ * \\copyright GNU Public License.
+ */
+//$ """ % (FIMD_RADIUS))
+//$ GEN_OUTPUT.append("""
 #include <stdint.h>
 
 #define FIMD_RADIUS 0 // placeholder
