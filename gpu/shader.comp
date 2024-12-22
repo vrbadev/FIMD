@@ -106,7 +106,7 @@ ivec2 bresenham_circle_next_pt()
     return ivec2(-1, -1);
 }
 
-int run_fast(int radius)
+int run_fimd(int radius)
 {
     int val;
     int boundary_max = 0x00;
@@ -159,7 +159,7 @@ void main()
         for (i = 0; i < int(config_radii_count); i++) {
             radius = int(configuration[6 + i]);
             if (atomicCounter(markers_count) >= uint(config_max_markers_count) || atomicCounter(sun_pts_count) >= uint(config_max_sun_pts_count)) { return; }
-            switch (run_fast(radius)) {
+            switch (run_fimd(radius)) {
                 case FIMD_RESULT_MARKER:
                     index = atomicCounterIncrement(markers_count);
                     if (index >= uint(config_max_markers_count)) { return; }
