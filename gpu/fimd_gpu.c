@@ -87,6 +87,63 @@ void* fimd_gpu_init(unsigned image_width, unsigned image_height, unsigned thresh
     return fimd_gpu_inst;
 }
 
+int compare_markers_xy1d(const void* a, const void* b) {
+    uint16_t* pt1 = (uint16_t*) a;
+    uint16_t* pt2 = (uint16_t*) b;
+    int res = (int) pt1[0] - (int) pt2[0];
+    if (res == 0) res = (int) pt1[1] - (int) pt2[1];
+    return res;
+}
+
+static unsigned fimd_gpu_get_marker_centroids(uint16_t markers_raw[][2], uint32_t init_cnt, uint32_t distance_px, unsigned markers[][2]) {
+    ivec3_t filtered_markers[init_cnt];
+    uint32_t filtered_cnt = 0;
+    uint32_t max_dist2 = (distance_px * distance_px);
+    uint32_t min_dist2, dist2;
+    int32_t closest_marker;
+    uint32_t i, j;
+    int32_t x2, y2, n;
+    int32_t pt_raw[2];
+
+    qsort(markers_raw, init_cnt, sizeof(markers_raw[0]), compare_markers_xy1d);
+
+    for (i = 0; i < init_cnt; i++) {
+        pt_raw[0] = markers_raw[i][1];
+        pt_raw[1] = markers_raw[i][0];
+
+        min_dist2 = max_dist2;
+        closest_marker = -1;
+
+        for (j = 0; j < filtered_cnt; j++) {
+            n = filtered_markers[j].z;
+            x2 = filtered_markers[j].x / n;
+            y2 = filtered_markers[j].y / n;
+            dist2 = (x2 - pt_raw[0])*(x2 - pt_raw[0]) + (y2 - pt_raw[1])*(y2 - pt_raw[1]);
+            if (dist2 < min_dist2) {
+                min_dist2 = dist2;
+                closest_marker = j;
+            }
+        }
+
+        if (closest_marker != -1) {
+            filtered_markers[closest_marker].x += pt_raw[0];
+            filtered_markers[closest_marker].y += pt_raw[1];
+            filtered_markers[closest_marker].z += 1;
+        } else {
+            filtered_markers[filtered_cnt].x = pt_raw[0];
+            filtered_markers[filtered_cnt].y = pt_raw[1];
+            filtered_markers[filtered_cnt].z = 1;
+            filtered_cnt++;
+        }
+    }
+
+    for (i = 0; i < filtered_cnt; i++) {
+        markers[i][0] = filtered_markers[i].x / filtered_markers[i].z;
+        markers[i][1] = filtered_markers[i].y / filtered_markers[i].z;
+    }
+
+    return filtered_cnt;
+}
 
 unsigned fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][2], unsigned* markers_count, unsigned sun_pts[][2], unsigned* sun_pts_count)
 {
@@ -155,10 +212,7 @@ unsigned fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][
             compute_lib_error_queue_flush(&inst, stderr);
             goto detect_end;
         }
-        for (int i = 0; i < *markers_count; i++) {
-            markers[i][0] = markers_raw[i][0];
-            markers[i][1] = markers_raw[i][1];
-        }
+        *markers_count = fimd_gpu_get_marker_centroids(markers_raw, *markers_count, 5, markers);
     }
 
     // retrieve detected sun points
@@ -171,8 +225,8 @@ unsigned fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][
             goto detect_end;
         }
         for (int i = 0; i < *sun_pts_count; i++) {
-            sun_pts[i][0] = sun_pts_raw[i][0];
-            sun_pts[i][1] = sun_pts_raw[i][1];
+            sun_pts[i][0] = sun_pts_raw[i][1];
+            sun_pts[i][1] = sun_pts_raw[i][0];
         }
     }
 

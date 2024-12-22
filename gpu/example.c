@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
         if (result != 0) {
             fprintf(stderr, "FIMD-GPU r=%u: ERROR - Return code %d\n\r\n", radius, result);
         } else {
-            printf("FIMD-GPU r=%u: detected %d marker(s), %d sun point(s).\nMarker(s): [", radius, markers_num, sun_pts_num);
+            printf("FIMD-GPU r=%u: detected %d marker(s), %d sun pixel(s).\nMarker(s): [", radius, markers_num, sun_pts_num);
             for (int i = 0; i < markers_num; i++) {
                 printf("(%u,%u),", markers[i][0], markers[i][1]);
             }
