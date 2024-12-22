@@ -278,7 +278,7 @@ enum compute_lib_error_e {
 /// Initializes the library instance. Also initializes EGL and GBM.
 /// \param inst Pointer to the GLES3ComputeLib library instance.
 /// \return Number of captured OpenGL errors.
-GLuint compute_lib_init(compute_lib_instance_t* inst);
+GLint compute_lib_init(compute_lib_instance_t* inst);
 
 /// Deinitializes the library instance. Releases all allocated resources.
 /// \param inst Pointer to the GLES3ComputeLib library instance.

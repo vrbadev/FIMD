@@ -106,7 +106,7 @@ static GLuint compute_lib_program_shader_log_to_queue(compute_lib_program_t* pro
     return compute_lib_gl_errors_count();
 }
 
-GLuint compute_lib_init(compute_lib_instance_t* inst)
+GLint compute_lib_init(compute_lib_instance_t* inst)
 {
     if (inst->initialised == GL_TRUE) {
         return COMPUTE_LIB_ERROR_ALREADY_INITIALISED;

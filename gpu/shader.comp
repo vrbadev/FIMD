@@ -1,9 +1,9 @@
 // Compute shader template file for the FIMD-GPU implementation.
 #version 310 es
 
-#define FAST_THRESHOLD %d
-#define FAST_THRESHOLD_DIFF %d
-#define FAST_THRESHOLD_SUN %d
+#define FIMD_THRESHOLD %d
+#define FIMD_THRESHOLD_DIFF %d
+#define FIMD_THRESHOLD_SUN %d
 #define MAX_MARKERS_COUNT %d
 #define MAX_SUN_PTS_COUNT %d
 
@@ -22,9 +22,9 @@ ivec2 image_size = ivec2(-1, -1);
 ivec2 center_pos = ivec2(-1, -1);
 int center_val = -1;
 
-#define FAST_RESULT_NONE 0
-#define FAST_RESULT_MARKER 1
-#define FAST_RESULT_SUN 2
+#define FIMD_RESULT_NONE 0
+#define FIMD_RESULT_MARKER 1
+#define FIMD_RESULT_SUN 2
 
 #define BRESENHAM_EMIT_PY_MX 0
 #define BRESENHAM_EMIT_MY_PX 1
@@ -123,14 +123,14 @@ int run_fast(int radius)
         pos = bresenham_circle_next_pt();
     }
     if (!((pos.x == -1) && (pos.y == -1)))
-      return FAST_RESULT_NONE;
+      return FIMD_RESULT_NONE;
 
-    if ((center_val - boundary_max) >= FAST_THRESHOLD_DIFF) {
-        return FAST_RESULT_MARKER;
-    } else if (center_val >= FAST_THRESHOLD_SUN && (center_val - boundary_min) <= FAST_THRESHOLD_DIFF) {
-        return FAST_RESULT_SUN;
+    if ((center_val - boundary_max) >= FIMD_THRESHOLD_DIFF) {
+        return FIMD_RESULT_MARKER;
+    } else if (center_val >= FIMD_THRESHOLD_SUN && (center_val - boundary_min) <= FIMD_THRESHOLD_DIFF) {
+        return FIMD_RESULT_SUN;
     } else {
-        return FAST_RESULT_NONE;
+        return FIMD_RESULT_NONE;
     }
 }
 
@@ -145,31 +145,31 @@ void main()
     center_val = int((imageLoad(image_in, center_pos).r));
     
     uint index;
-    if (center_val >= FAST_THRESHOLD) {
+    if (center_val >= FIMD_THRESHOLD) {
         switch (run_fast(3)) {
-            case FAST_RESULT_MARKER:
+            case FIMD_RESULT_MARKER:
                 index = atomicCounterIncrement(markers_count);
                 if (index >= uint(MAX_MARKERS_COUNT)) { return; }
                 markers[index] = ((uint(center_pos.x) & uint(0x0000FFFF)) << 16) | (uint(center_pos.y) & uint(0x0000FFFF));
                 break;
-            case FAST_RESULT_SUN:
+            case FIMD_RESULT_SUN:
                 index = atomicCounterIncrement(sun_pts_count);
                 if (index >= uint(MAX_SUN_PTS_COUNT)) { return; }
                 sun_pts[index] = ((uint(center_pos.x) & uint(0x0000FFFF)) << 16) | (uint(center_pos.y) & uint(0x0000FFFF));
                 break;
-            case FAST_RESULT_NONE:
+            case FIMD_RESULT_NONE:
                 switch (run_fast(4)) {
-                    case FAST_RESULT_MARKER:
+                    case FIMD_RESULT_MARKER:
                         index = atomicCounterIncrement(markers_count);
                         if (index >= uint(MAX_MARKERS_COUNT)) { return; }
                         markers[index] = ((uint(center_pos.x) & uint(0x0000FFFF)) << 16) | (uint(center_pos.y) & uint(0x0000FFFF));
                         break;
-                    case FAST_RESULT_SUN:
+                    case FIMD_RESULT_SUN:
                         index = atomicCounterIncrement(sun_pts_count);
                         if (index >= uint(MAX_SUN_PTS_COUNT)) { return; }
                         sun_pts[index] = ((uint(center_pos.x) & uint(0x0000FFFF)) << 16) | (uint(center_pos.y) & uint(0x0000FFFF));
                         break;
-                    case FAST_RESULT_NONE:
+                    case FIMD_RESULT_NONE:
                         break;
                 }
                 break;

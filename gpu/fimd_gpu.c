@@ -14,9 +14,6 @@
 extern char _binary_shader_comp_start[];
 static const char* render_devices = RENDER_DEVICES "\0";
 
-static struct fimd_gpu_inst_s* fimd_gpu_inst_init(compute_lib_instance_t* inst, uint32_t image_width, uint32_t image_height, uint32_t max_markers_count, uint32_t max_sun_pts_count, uint32_t threshold, uint32_t threshold_diff, uint32_t threshold_sun);
-static void fimd_gpu_inst_destroy(struct fimd_gpu_inst_s* fimd_gpu_inst);
-
 static compute_lib_instance_t inst;
 
 static unsigned int max_invocations;
@@ -36,21 +33,23 @@ struct fimd_gpu_inst_s {
 
 void* fimd_gpu_init(unsigned image_width, unsigned image_height, unsigned threshold, unsigned threshold_diff, unsigned threshold_sun, unsigned max_markers_count, unsigned max_sun_pts_count)
 {
-    //printf("Initializing compute library instance.\r\n");
+    int compute_lib_error = 0;
+    unsigned error = 0;
+
+    // initialize library context for the first available render device
     char devs[strlen(render_devices)+1];
     strcpy(devs, render_devices);
     char* token = strtok(devs, ",");
-    int init_res = -1;
     while (token != NULL) {
         inst = COMPUTE_LIB_INSTANCE_NEW(token);
-        init_res = compute_lib_init(&inst);
-        if (init_res != COMPUTE_LIB_ERROR_GPU_DRI_PATH) break;
+        compute_lib_error = compute_lib_init(&inst);
+        if (compute_lib_error != COMPUTE_LIB_ERROR_GPU_DRI_PATH) break;
         token = strtok(NULL, ",");
     }
 
-    if (init_res != GL_NO_ERROR) {
+    if (compute_lib_error != GL_NO_ERROR) {
         compute_lib_error_queue_flush(&inst, stderr);
-        compute_lib_print_error(init_res, stderr);
+        compute_lib_print_error(compute_lib_error, stderr);
         fprintf(stderr, "ERROR: Failed to initialize compute_lib instance!\r\n");
         return NULL;
     }
@@ -72,15 +71,79 @@ void* fimd_gpu_init(unsigned image_width, unsigned image_height, unsigned thresh
         local_size_y /= 2;
     }
 
-    //printf("Selected local group sizes: x=%d, y=%d\r\n", local_size_x, local_size_y);
-    //printf("Number of invocations: nx=%d, ny=%d\r\n", image_width / local_size_x, image_height / local_size_y);
+    // initialize shader program and resources
+    struct fimd_gpu_inst_s* fimd_gpu_inst = (struct fimd_gpu_inst_s*) malloc(sizeof(struct fimd_gpu_inst_s));
 
-    //printf("Initializing marker detection GPU instance.\r\n");
-    struct fimd_gpu_inst_s* fimd_gpu_inst;
-    if ((fimd_gpu_inst = fimd_gpu_inst_init(&inst, image_width, image_height, max_markers_count, max_sun_pts_count, threshold, threshold_diff, threshold_sun)) == NULL) {
-        fprintf(stderr, "ERROR: Failed to initialize marker detection for OpenGLES!\r\n");
+    fimd_gpu_inst->image_in = COMPUTE_LIB_IMAGE2D_NEW("image_in", GL_TEXTURE0, image_width, image_height, GL_READ_ONLY, 4, GL_UNSIGNED_BYTE);
+    fimd_gpu_inst->image_in.resource.value = 0;
+    compute_lib_image2d_setup_format(&(fimd_gpu_inst->image_in));
+
+    fimd_gpu_inst->max_sun_pts_count = max_sun_pts_count;
+    fimd_gpu_inst->sun_pts_count_acbo = COMPUTE_LIB_ACBO_NEW("sun_pts_count", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
+    fimd_gpu_inst->sun_pts_count_acbo.resource.value = 2;
+
+    fimd_gpu_inst->max_markers_count = max_markers_count;
+    fimd_gpu_inst->markers_count_acbo = COMPUTE_LIB_ACBO_NEW("markers_count", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
+    fimd_gpu_inst->markers_count_acbo.resource.value = 3;
+
+    fimd_gpu_inst->markers_ssbo = COMPUTE_LIB_SSBO_NEW("markers_buffer", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
+    fimd_gpu_inst->markers_ssbo.resource.value = 4;
+
+    fimd_gpu_inst->sun_pts_ssbo = COMPUTE_LIB_SSBO_NEW("sun_pts_buffer", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
+    fimd_gpu_inst->sun_pts_ssbo.resource.value = 5;
+
+    fimd_gpu_inst->compute_prog = COMPUTE_LIB_PROGRAM_NEW(&inst, NULL, local_size_x, local_size_y, 1);
+
+    if(asprintf(&(fimd_gpu_inst->compute_prog.source), _binary_shader_comp_start, threshold, threshold_diff, threshold_sun, max_markers_count, max_sun_pts_count, local_size_x, local_size_y) < 0) {
+        fprintf(stderr, "ERROR: Failed to format shader source!\r\n");
+        return NULL;
+    }
+
+    error = compute_lib_program_init(&(fimd_gpu_inst->compute_prog));
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "ERROR: Failed to create program!\r\n");
         compute_lib_error_queue_flush(&inst, stderr);
-        compute_lib_deinit(&inst);
+        fimd_gpu_destroy((void*) fimd_gpu_inst);
+        return NULL;
+    }
+
+    error = compute_lib_image2d_init(&(fimd_gpu_inst->image_in), 0);
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "ERROR: Failed to init image2d '%s'!\r\n", fimd_gpu_inst->image_in.resource.name);
+        compute_lib_error_queue_flush(&inst, stderr);
+        fimd_gpu_destroy((void*) fimd_gpu_inst);
+        return NULL;
+    }
+
+    error = compute_lib_acbo_init(&(fimd_gpu_inst->sun_pts_count_acbo), NULL, 0);
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "ERROR: Failed to init acbo '%s'!\r\n", fimd_gpu_inst->sun_pts_count_acbo.resource.name);
+        compute_lib_error_queue_flush(&inst, stderr);
+        fimd_gpu_destroy((void*) fimd_gpu_inst);
+        return NULL;
+    }
+
+    error = compute_lib_acbo_init(&(fimd_gpu_inst->markers_count_acbo), NULL, 0);
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "ERROR: Failed to init acbo '%s'!\r\n", fimd_gpu_inst->markers_count_acbo.resource.name);
+        compute_lib_error_queue_flush(&inst, stderr);
+        fimd_gpu_destroy((void*) fimd_gpu_inst);
+        return NULL;
+    }
+
+    error = compute_lib_ssbo_init(&(fimd_gpu_inst->markers_ssbo), NULL, (GLint) max_markers_count);
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "ERROR: Failed to init ssbo '%s'!\r\n", fimd_gpu_inst->markers_ssbo.resource.name);
+        compute_lib_error_queue_flush(&inst, stderr);
+        fimd_gpu_destroy((void*) fimd_gpu_inst);
+        return NULL;
+    }
+
+    error = compute_lib_ssbo_init(&(fimd_gpu_inst->sun_pts_ssbo), NULL, (GLint) max_sun_pts_count);
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "ERROR: Failed to init ssbo '%s'!\r\n", fimd_gpu_inst->sun_pts_ssbo.resource.name);
+        compute_lib_error_queue_flush(&inst, stderr);
+        fimd_gpu_destroy((void*) fimd_gpu_inst);
         return NULL;
     }
 
@@ -189,6 +252,7 @@ unsigned fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][
         goto detect_end;
     }
 
+    // retrieve detected markers
     error = compute_lib_acbo_read_uint_val(&fimd_gpu_inst->markers_count_acbo, (GLuint*) markers_count);
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "ERROR: Failed to read markers count acbo! Code: %d\r\n", error);
@@ -196,14 +260,6 @@ unsigned fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][
         goto detect_end;
     }
 
-    error = compute_lib_acbo_read_uint_val(&fimd_gpu_inst->sun_pts_count_acbo, (GLuint*) sun_pts_count);
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to read sun points count acbo! Code: %d\r\n", error);
-        compute_lib_error_queue_flush(&inst, stderr);
-        goto detect_end;
-    }
-
-    // retrieve detected markers
     if (*markers_count > fimd_gpu_inst->max_markers_count) *markers_count = fimd_gpu_inst->max_markers_count;
     if (*markers_count > 0) {
         error = compute_lib_ssbo_read(&fimd_gpu_inst->markers_ssbo, (void *) markers_raw, (GLint) *markers_count);
@@ -216,6 +272,13 @@ unsigned fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][
     }
 
     // retrieve detected sun points
+    error = compute_lib_acbo_read_uint_val(&fimd_gpu_inst->sun_pts_count_acbo, (GLuint*) sun_pts_count);
+    if (error != GL_NO_ERROR) {
+        fprintf(stderr, "ERROR: Failed to read sun points count acbo! Code: %d\r\n", error);
+        compute_lib_error_queue_flush(&inst, stderr);
+        goto detect_end;
+    }
+
     if (*sun_pts_count > fimd_gpu_inst->max_sun_pts_count) *sun_pts_count = fimd_gpu_inst->max_sun_pts_count;
     if (*sun_pts_count > 0) {
         error = compute_lib_ssbo_read(&fimd_gpu_inst->sun_pts_ssbo, (void *) sun_pts_raw, (GLint) *sun_pts_count);
@@ -237,12 +300,7 @@ detect_end:
 
 void fimd_gpu_destroy(void* handle)
 {
-    fimd_gpu_inst_destroy((struct fimd_gpu_inst_s*) handle);
-    compute_lib_deinit(&inst);
-}
-
-static void fimd_gpu_inst_destroy(struct fimd_gpu_inst_s* fimd_gpu_inst)
-{
+    struct fimd_gpu_inst_s* fimd_gpu_inst = (struct fimd_gpu_inst_s*) handle;
     compute_lib_image2d_destroy(&(fimd_gpu_inst->image_in));
     compute_lib_acbo_destroy(&(fimd_gpu_inst->markers_count_acbo));
     compute_lib_acbo_destroy(&(fimd_gpu_inst->sun_pts_count_acbo));
@@ -250,85 +308,7 @@ static void fimd_gpu_inst_destroy(struct fimd_gpu_inst_s* fimd_gpu_inst)
     compute_lib_ssbo_destroy(&(fimd_gpu_inst->sun_pts_ssbo));
     compute_lib_program_destroy(&(fimd_gpu_inst->compute_prog), GL_TRUE);
     free(fimd_gpu_inst);
+
+    compute_lib_deinit(&inst);
 }
 
-static struct fimd_gpu_inst_s* fimd_gpu_inst_init(compute_lib_instance_t* inst, uint32_t image_width, uint32_t image_height, uint32_t max_markers_count, uint32_t max_sun_pts_count, uint32_t threshold, uint32_t threshold_diff, uint32_t threshold_sun)
-{
-    unsigned error = 0;
-    struct fimd_gpu_inst_s* fimd_gpu_inst = (struct fimd_gpu_inst_s*) malloc(sizeof(struct fimd_gpu_inst_s));
-
-    fimd_gpu_inst->image_in = COMPUTE_LIB_IMAGE2D_NEW("image_in", GL_TEXTURE0, image_width, image_height, GL_READ_ONLY, 4, GL_UNSIGNED_BYTE);
-    fimd_gpu_inst->image_in.resource.value = 0;
-    compute_lib_image2d_setup_format(&(fimd_gpu_inst->image_in));
-
-    fimd_gpu_inst->max_sun_pts_count = max_sun_pts_count;
-    fimd_gpu_inst->sun_pts_count_acbo = COMPUTE_LIB_ACBO_NEW("sun_pts_count", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
-    fimd_gpu_inst->sun_pts_count_acbo.resource.value = 2;
-
-    fimd_gpu_inst->max_markers_count = max_markers_count;
-    fimd_gpu_inst->markers_count_acbo = COMPUTE_LIB_ACBO_NEW("markers_count", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
-    fimd_gpu_inst->markers_count_acbo.resource.value = 3;
-
-    fimd_gpu_inst->markers_ssbo = COMPUTE_LIB_SSBO_NEW("markers_buffer", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
-    fimd_gpu_inst->markers_ssbo.resource.value = 4;
-
-    fimd_gpu_inst->sun_pts_ssbo = COMPUTE_LIB_SSBO_NEW("sun_pts_buffer", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
-    fimd_gpu_inst->sun_pts_ssbo.resource.value = 5;
-
-    fimd_gpu_inst->compute_prog = COMPUTE_LIB_PROGRAM_NEW(inst, NULL, local_size_x, local_size_y, 1);
-
-    if(asprintf(&(fimd_gpu_inst->compute_prog.source), _binary_shader_comp_start, threshold, threshold_diff, threshold_sun, max_markers_count, max_sun_pts_count, local_size_x, local_size_y) < 0) {
-        fprintf(stderr, "ERROR: Failed to format shader source!\r\n");
-        return NULL;
-    }
-
-    error = compute_lib_program_init(&(fimd_gpu_inst->compute_prog));
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to create program!\r\n");
-        compute_lib_error_queue_flush(inst, stderr);
-        fimd_gpu_inst_destroy(fimd_gpu_inst);
-        return NULL;
-    }
-
-    error = compute_lib_image2d_init(&(fimd_gpu_inst->image_in), 0);
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to init image2d '%s'!\r\n", fimd_gpu_inst->image_in.resource.name);
-        compute_lib_error_queue_flush(inst, stderr);
-        fimd_gpu_inst_destroy(fimd_gpu_inst);
-        return NULL;
-    }
-
-    error = compute_lib_acbo_init(&(fimd_gpu_inst->sun_pts_count_acbo), NULL, 0);
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to init acbo '%s'!\r\n", fimd_gpu_inst->sun_pts_count_acbo.resource.name);
-        compute_lib_error_queue_flush(inst, stderr);
-        fimd_gpu_inst_destroy(fimd_gpu_inst);
-        return NULL;
-    }
-
-    error = compute_lib_acbo_init(&(fimd_gpu_inst->markers_count_acbo), NULL, 0);
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to init acbo '%s'!\r\n", fimd_gpu_inst->markers_count_acbo.resource.name);
-        compute_lib_error_queue_flush(inst, stderr);
-        fimd_gpu_inst_destroy(fimd_gpu_inst);
-        return NULL;
-    }
-
-    error = compute_lib_ssbo_init(&(fimd_gpu_inst->markers_ssbo), NULL, (GLint) max_markers_count);
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to init ssbo '%s'!\r\n", fimd_gpu_inst->markers_ssbo.resource.name);
-        compute_lib_error_queue_flush(inst, stderr);
-        fimd_gpu_inst_destroy(fimd_gpu_inst);
-        return NULL;
-    }
-
-    error = compute_lib_ssbo_init(&(fimd_gpu_inst->sun_pts_ssbo), NULL, (GLint) max_sun_pts_count);
-    if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to init ssbo '%s'!\r\n", fimd_gpu_inst->sun_pts_ssbo.resource.name);
-        compute_lib_error_queue_flush(inst, stderr);
-        fimd_gpu_inst_destroy(fimd_gpu_inst);
-        return NULL;
-    }
-
-    return fimd_gpu_inst;
-}
