@@ -62,11 +62,11 @@ int main(int argc, char *argv[]) {
         if (result != 0) {
             fprintf(stderr, "FIMD-CPU r=%u: ERROR - Return code %d\n\r\n", radius, result);
         } else {
-            printf("FIMD-CPU r=%u: detected %d markers, %d sun points.\nMarkers: [", radius, markers_num, sun_pts_num);
+            printf("FIMD-CPU r=%u: detected %d marker(s), %d sun point(s).\nMarker(s): [", radius, markers_num, sun_pts_num);
             for (int i = 0; i < markers_num; i++) {
                 printf("(%u,%u),", markers[i][0], markers[i][1]);
             }
-            printf("\b]\n\r\n");
+            printf("%s]\n\r\n", markers_num > 0 ? "\b" : "");
         }
     }
 
