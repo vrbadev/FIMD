@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
 Created on Fri Dec 20 12:42:07 2024
@@ -154,8 +155,8 @@ def get_boundary_evaluation_order(boundary: list) -> list:
 if __name__ == "__main__":
     parser = ArgumentParser(description="Script for generation of FIMD-CPU approach using templates.")
     parser.add_argument("-r", "--radius", type=int, required=True, help="Radius of the circle to generate.")
-    parser.add_argument("-t", "--template", type=str, required=True, help="Template file for the code generation.")
-    parser.add_argument("-o", "--output", type=str, required=True, help="Output file for the generated code.")
+    parser.add_argument("-t", "--template", type=str, default="", help="Template file for the code generation.")
+    parser.add_argument("-o", "--output", type=str, default="", help="Output file for the generated code.")
     parser.add_argument("-v", "--verbose", action="store_true", help="Prints the generated code to the console.")
 
     if len(argv) == 1:
@@ -164,17 +165,20 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if not path.exists(args.template):
+    generation_only = len(args.template) == 0 or len(args.output) == 0
+    if generation_only:
+        print("Warning: No template or output file specified. Performing only the circle generation.")
+    elif not path.exists(args.template):
         print("Error: Template file '%s' not found." % args.template)
         exit(1)
 
-    if args.verbose:
+    if args.verbose or generation_only:
         print("Starting", parser.description)
         print("Selected circle radius:", args.radius)
     
     boundary, interior = bresenham_circle_points(args.radius)
 
-    if args.verbose:
+    if args.verbose or generation_only:
         print("\nGenerated Bresenham circle:")
         print("-- Boundary points:", len(boundary))
         print("-- Interior points:", len(interior))
@@ -185,12 +189,15 @@ if __name__ == "__main__":
     FIMD_BOUNDARY = get_boundary_evaluation_order(boundary)
     FIMD_INTERIOR = list(sorted([(y, x) for y, x in interior if y > 0 or (y == 0 and x >= 0)]))
 
-    if args.verbose:
+    if args.verbose or generation_only:
         print("\nPixel evaluation order:")
         print("-- Boundary points:", len(FIMD_BOUNDARY))
         print("-- Interior points:", len(FIMD_INTERIOR))
         print("Visualization:")
         print_circle(FIMD_BOUNDARY, FIMD_INTERIOR)
+
+    if generation_only:
+        exit(0)
 
     if args.verbose:
         print("Generating code using template:", args.template)
