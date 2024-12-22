@@ -9,7 +9,7 @@ add_compile_definitions(_GNU_SOURCE)
 add_compile_options(-O3)
 
 # Target: Shared library (libfimd_gpu.so)
-add_library(${PROJECT_NAME} STATIC)
+add_library(${PROJECT_NAME} SHARED)
 
 message("[Available render devices and cards]")
 file(GLOB RENDER_DEVICES "/dev/dri/renderD*" "/dev/dri/card*")

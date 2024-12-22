@@ -15,5 +15,5 @@ add_custom_target(${PROJECT_NAME})
 add_dependencies(${PROJECT_NAME} fimd_cpu fimd_gpu)
 
 # output shared library absolute paths
-file(REAL_PATH "${CMAKE_CURRENT_BINARY_DIR}/cpu/libfimd_cpu.so" FIMD_CPU_LIB_PATH)
-file(REAL_PATH "${CMAKE_CURRENT_BINARY_DIR}/gpu/libfimd_gpu.so" FIMD_GPU_LIB_PATH)
+file(REAL_PATH "${CMAKE_CURRENT_BINARY_DIR}/cpu/libfimd_cpu.so" FIMD_CPU_LIB)
+file(REAL_PATH "${CMAKE_CURRENT_BINARY_DIR}/gpu/libfimd_gpu.so" FIMD_GPU_LIB)
