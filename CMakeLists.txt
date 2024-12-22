@@ -18,5 +18,8 @@ add_dependencies(${PROJECT_NAME} fimd_cpu fimd_gpu)
 file(REAL_PATH "${PROJECT_SOURCE_DIR}/lib/libfimd_cpu.so" FIMD_CPU_LIB)
 file(REAL_PATH "${PROJECT_SOURCE_DIR}/lib/libfimd_gpu.so" FIMD_GPU_LIB)
 
+message("[FIMD shared libraries]")
 message("-- FIMD-CPU library: ${FIMD_CPU_LIB}")
 message("-- FIMD-GPU library: ${FIMD_GPU_LIB}")
+
+message("[FIMD CMakeLists completed]")
