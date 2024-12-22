@@ -69,16 +69,16 @@ int main(int argc, char *argv[]) {
     unsigned sun_pts_num = 0;
 
     // Run the detection algorithm for all available radii (must be compiled in the shared library!)
-    for (unsigned radius = 1; radius < 10; radius++) {
+    for (unsigned radius = 3; radius < 4; radius++) {
         int result = fimd_gpu_detect(handle, image_data, markers, &markers_num, sun_pts, &sun_pts_num);
         if (result != 0) {
-            fprintf(stderr, "FIMD-CPU r=%u: ERROR - Return code %d\n\r\n", radius, result);
+            fprintf(stderr, "FIMD-GPU r=%u: ERROR - Return code %d\n\r\n", radius, result);
         } else {
-            printf("FIMD-CPU r=%u: detected %d markers, %d sun points.\nMarkers: [", radius, markers_num, sun_pts_num);
+            printf("FIMD-GPU r=%u: detected %d marker(s), %d sun point(s).\nMarker(s): [", radius, markers_num, sun_pts_num);
             for (int i = 0; i < markers_num; i++) {
                 printf("(%u,%u),", markers[i][0], markers[i][1]);
             }
-            printf("\b]\n\r\n");
+            printf("%s]\n\r\n", markers_num > 0 ? "\b" : "");
         }
     }
 

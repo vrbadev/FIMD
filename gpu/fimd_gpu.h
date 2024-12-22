@@ -35,7 +35,7 @@ void* fimd_gpu_init(unsigned image_width, unsigned image_height, unsigned thresh
  * \param sun_pts_count Pointer to store the number of detected sun points.
  * \return 0 on success, non-zero on failure.
  */
-int fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][2], unsigned* markers_count, unsigned sun_pts[][2], unsigned* sun_pts_count);
+unsigned fimd_gpu_detect(void* handle, unsigned char* image, unsigned markers[][2], unsigned* markers_count, unsigned sun_pts[][2], unsigned* sun_pts_count);
 
 /**
  * \brief Destroys the FIMD-GPU instance and releases associated resources.
