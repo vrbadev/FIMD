@@ -10,7 +10,7 @@ This repository contains implementations of the FIMD for CPUs, GPUs and FPGAs. T
 
 ## Usage (FIMD-CPU and FIMD-GPU)
 
-Clone this repository (a CLion project) and add its top directory as a subdirectory to your CMake project. Compile the top CMake project. The shared libraries will be built as `libfimd_cpu.so` and `libfimd_gpu.so`, with absolute paths in CMake variables `FIMD_CPU_LIB` and `FIMD_GPU_LIB`, respectively. See the `CMakeLists.txt` files and executable examples in the related directories for more details.
+Clone this repository (a CLion project) and add its top directory as a subdirectory to your CMake project. Compile the top CMake project. The shared libraries will be built as `libfimd_cpu.so` and `libfimd_gpu.so` in a `lib` directory, with absolute paths in CMake variables `FIMD_CPU_LIB` and `FIMD_GPU_LIB`, respectively. See the `CMakeLists.txt` files and executable examples in the related directories for more details.
 
 ## Dataset
 

@@ -63,6 +63,14 @@ message("[Code generation done]")
 
 target_sources(${PROJECT_NAME} PRIVATE fimd_cpu.c ${GENERATED_SOURCES})
 
+add_custom_command(TARGET ${PROJECT_NAME}
+        POST_BUILD
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}/../"
+        COMMAND mkdir -p lib && cp "$<TARGET_FILE:${PROJECT_NAME}>" "lib/libfimd_cpu.so"
+        DEPENDS ${PROJECT_NAME}
+        VERBATIM
+)
+
 # Target: Executable example (fimd_cpu_example)
 add_executable(${PROJECT_NAME}_example example.c)
 target_link_libraries(${PROJECT_NAME}_example ${PROJECT_NAME})
