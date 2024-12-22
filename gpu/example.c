@@ -11,13 +11,17 @@
 
 #include "fimd_gpu.h"
 
+// user settings for FIMD-GPU
+// constants - used during initialization:
 static unsigned image_width = 752;
 static unsigned image_height = 480;
 static unsigned max_markers_count = 300;
 static unsigned max_sun_points_count = 50000;
+// these may be changed between detector executions:
 static unsigned threshold = 120;
 static unsigned threshold_diff = 60;
 static unsigned threshold_sun = 240;
+static unsigned radii[] = { 2, 3, 4 }; // tested sequentially in the given order, until detection is successful
 
 
 int main(int argc, char *argv[]) {
@@ -56,7 +60,7 @@ int main(int argc, char *argv[]) {
     fclose(file);
 
     // Initialize the FIMD-GPU library
-    void* handle = fimd_gpu_init(image_width, image_height, threshold, threshold_diff, threshold_sun, max_markers_count, max_sun_points_count);
+    fimd_gpu_t* handle = fimd_gpu_init(image_width, image_height, threshold, threshold_diff, threshold_sun, max_markers_count, max_sun_points_count, sizeof(radii) / sizeof(radii[0]), radii);
     if (!handle) {
         perror("Failed to initialize FIMD-GPU library!");
         return EXIT_FAILURE;
@@ -68,18 +72,16 @@ int main(int argc, char *argv[]) {
     unsigned markers_num = 0;
     unsigned sun_pts_num = 0;
 
-    // Run the detection algorithm for all available radii (must be compiled in the shared library!)
-    for (unsigned radius = 3; radius < 4; radius++) {
-        int result = fimd_gpu_detect(handle, image_data, markers, &markers_num, sun_pts, &sun_pts_num);
-        if (result != 0) {
-            fprintf(stderr, "FIMD-GPU r=%u: ERROR - Return code %d\n\r\n", radius, result);
-        } else {
-            printf("FIMD-GPU r=%u: detected %d marker(s), %d sun pixel(s).\nMarker(s): [", radius, markers_num, sun_pts_num);
-            for (int i = 0; i < markers_num; i++) {
-                printf("(%u,%u),", markers[i][0], markers[i][1]);
-            }
-            printf("%s]\n\r\n", markers_num > 0 ? "\b" : "");
+    // Run the detection algorithm for all selected radii
+    int result = fimd_gpu_detect(handle, image_data, markers, &markers_num, sun_pts, &sun_pts_num);
+    if (result != 0) {
+        fprintf(stderr, "FIMD-GPU: ERROR - Return code %d\n\r\n", result);
+    } else {
+        printf("FIMD-GPU: detected %d marker(s), %d sun pixel(s).\nMarker(s): [", markers_num, sun_pts_num);
+        for (int i = 0; i < markers_num; i++) {
+            printf("(%u,%u),", markers[i][0], markers[i][1]);
         }
+        printf("%s]\n\r\n", markers_num > 0 ? "\b" : "");
     }
 
     // Deinitialize library
