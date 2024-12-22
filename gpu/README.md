@@ -2,6 +2,8 @@
 
 This directory contains the GPU implementation of the FIMD algorithm. The compute shader file `shader.comp` is compiled and executed using the OpenGL API. The shared library exposes a detection function for the GPU implementation.
 
+Required packages (apt): `libegl-dev`, `libgles-dev`, `libgbm-dev`. The target platform must support OpenGL 3.1 compute shaders.
+
 CMake compiles two targets:
 
 * `fimd_gpu` - A shared library exposing a detection function in the header file `fimd_gpu.h`. 
