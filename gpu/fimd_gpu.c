@@ -189,21 +189,21 @@ int compare_markers_xy1d(const void* a, const void* b) {
     return res;
 }
 
-static unsigned fimd_gpu_get_marker_centroids(uint16_t markers_raw[][2], uint32_t init_cnt, uint32_t distance_px, unsigned markers[][2]) {
-    ivec3_t filtered_markers[init_cnt];
+static unsigned fimd_gpu_get_marker_centroids(uint32_t markers_raw[], uint32_t init_cnt, uint32_t distance_px, unsigned markers[][2]) {
+    uvec3_t filtered_markers[init_cnt];
     uint32_t filtered_cnt = 0;
     uint32_t max_dist2 = (distance_px * distance_px);
     uint32_t min_dist2, dist2;
     int32_t closest_marker;
-    uint32_t i, j;
-    int32_t x2, y2, n;
-    int32_t pt_raw[2];
+    int32_t i, j;
+    uint32_t x2, y2, n;
+    uint32_t pt_raw[2];
 
     qsort(markers_raw, init_cnt, sizeof(markers_raw[0]), compare_markers_xy1d);
 
     for (i = 0; i < init_cnt; i++) {
-        pt_raw[0] = markers_raw[i][1];
-        pt_raw[1] = markers_raw[i][0];
+        pt_raw[0] = (markers_raw[i] >> 16) & 0x0000FFFF;
+        pt_raw[1] = markers_raw[i] & 0x0000FFFF;
 
         min_dist2 = max_dist2;
         closest_marker = -1;
@@ -248,8 +248,8 @@ unsigned fimd_gpu_detect(fimd_gpu_t* handle, unsigned char* image, unsigned mark
     for (int i = 0; i < size; i++) { rgba8ui[4 * i] = image[i]; }
 
     unsigned error = 0;
-    uint16_t markers_raw[handle->config.max_markers_count][2];
-    uint16_t sun_pts_raw[handle->config.max_sun_pts_count][2];
+    uint32_t markers_raw[handle->config.max_markers_count];
+    uint32_t sun_pts_raw[handle->config.max_sun_pts_count];
 
     // write configuration
     error = compute_lib_ssbo_write(&fimd_gpu_inst->configuration_ssbo, (void *) &handle->config, (GLint) sizeof(handle->config) / sizeof(uint32_t));
@@ -326,8 +326,8 @@ unsigned fimd_gpu_detect(fimd_gpu_t* handle, unsigned char* image, unsigned mark
             goto detect_end;
         }
         for (int i = 0; i < *sun_pts_count; i++) {
-            sun_pts[i][0] = sun_pts_raw[i][1];
-            sun_pts[i][1] = sun_pts_raw[i][0];
+            sun_pts[i][1] = sun_pts_raw[i] & 0x0000FFFF;
+            sun_pts[i][0] = (sun_pts_raw[i] >> 16) & 0x0000FFFF;
         }
     }
 
