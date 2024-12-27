@@ -67,13 +67,13 @@ int main(int argc, char *argv[]) {
     }
 
     // Create arrays to store the detected markers and sun points as (x, y)
-    unsigned markers[max_markers_count][2];
-    unsigned sun_pts[max_sun_points_count][2];
+    unsigned (*markers)[2] = (unsigned(*)[2]) malloc(max_markers_count * 2 * sizeof(unsigned));
+    unsigned (*sun_pts)[2] = (unsigned(*)[2]) malloc(max_sun_points_count * 2 * sizeof(unsigned));
     unsigned markers_num = 0;
     unsigned sun_pts_num = 0;
 
     // Run the detection algorithm for all selected radii
-    int result = fimd_gpu_detect(handle, image_data, markers, &markers_num, sun_pts, &sun_pts_num);
+    unsigned result = fimd_gpu_detect(handle, image_data, markers, &markers_num, sun_pts, &sun_pts_num);
     if (result != 0) {
         fprintf(stderr, "FIMD-GPU: ERROR - Return code %d\n\r\n", result);
     } else {
@@ -88,6 +88,8 @@ int main(int argc, char *argv[]) {
     fimd_gpu_destroy(handle);
 
     // Free the allocated memory
+    free(markers);
+    free(sun_pts);
     free(image_data);
 
     return EXIT_SUCCESS;
