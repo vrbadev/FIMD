@@ -14,6 +14,7 @@
     </sourceRoots>
     <excludeRoots>
       <file path="$PROJECT_DIR$/fpga" />
+      <file path="$PROJECT_DIR$/lib" />
     </excludeRoots>
   </component>
 </project>
