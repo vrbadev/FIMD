@@ -10,14 +10,20 @@ add_compile_options(-O3 -g) # -save-temps
 # Target: Shared library (libfimd_cpu.so)
 add_library(${PROJECT_NAME} SHARED)
 
+# User defined variables
 set(IM_WIDTH 752)
 set(IM_HEIGHT 480)
 set(FIMD_THRESHOLD_CENTER 120)
 set(FIMD_THRESHOLD_DIFF 60)
 set(FIMD_THRESHOLD_SUN 240)
 set(FIMD_MAX_MARKERS_COUNT 300)
-set(FIMD_MAX_SUN_PTS_COUNT 50000)
+set(FIMD_MAX_SUN_PTS_COUNT 10000)
 set(FIMD_TERM_SEQ 0x00FF)
+set(FIMD_RADII)
+foreach(RADIUS RANGE 1 10 1)
+    list(APPEND FIMD_RADII ${RADIUS})
+endforeach()
+
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE IM_WIDTH=${IM_WIDTH})
 target_compile_definitions(${PROJECT_NAME} PRIVATE IM_HEIGHT=${IM_HEIGHT})
@@ -33,10 +39,9 @@ file(REAL_PATH "${PROJECT_SOURCE_DIR}/template.c" TEMPLATE_PATH)
 
 message("[Code generation for FIMD-CPU]")
 
-set(FIMD_RADII)  # Predefined set of radii
-foreach(RADIUS RANGE 1 10 1)
-    list(APPEND FIMD_RADII ${RADIUS})
-endforeach()
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+message("-- Python3 executable found: ${Python3_EXECUTABLE}")
+
 string(JOIN "," FIMD_RADII_STR ${FIMD_RADII})
 list(LENGTH FIMD_RADII FIMD_RADII_COUNT)
 message("-- radii (${FIMD_RADII_COUNT}): ${FIMD_RADII_STR}")
@@ -51,7 +56,7 @@ foreach(FIMD_RADIUS IN LISTS FIMD_RADII)
     message("-- radius ${FIMD_RADIUS}: ${TEMPLATE_PATH} -> ${GEN_SOURCE_PATH}")
     add_custom_command(
             OUTPUT ${GEN_SOURCE_PATH}
-            COMMAND python ${GEN_SCRIPT_PATH} -t ${TEMPLATE_PATH} -o ${GEN_SOURCE_PATH} -r ${FIMD_RADIUS}
+            COMMAND ${Python3_EXECUTABLE} ${GEN_SCRIPT_PATH} -t ${TEMPLATE_PATH} -o ${GEN_SOURCE_PATH} -r ${FIMD_RADIUS}
             DEPENDS ${TEMPLATE_PATH}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
             VERBATIM
