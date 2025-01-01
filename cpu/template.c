@@ -60,13 +60,13 @@ SUN_TEST:
 
 //$ for i, (y, x) in enumerate(FIMD_BOUNDARY[1:]):
 //$     GEN_OUTPUT.append(("""
-    // boundary pixel %d, compare difference from central pixel
+    // boundary pixel #%d, compare difference from central pixel
     if ((pix_val - *((uint8_t*) (img_ptr + FIMD_BOUNDARY_PTxx))) > FIMD_THRESHOLD_DIFF) goto LOOP;
 //$     """ % (i+1)).replace("FIMD_BOUNDARY_PTxx", "(((%d)*(IM_WIDTH))+(%d))" % (y, x)))
 
 //$ for i, (y, x) in enumerate(FIMD_INTERIOR):
 //$     GEN_OUTPUT.append(("""
-    // interior pixel %d set to 0
+    // interior pixel #%d set to 0
     *((uint8_t*) (img_ptr + FIMD_INTERIOR_PTxx)) = 0x00;
 //$     """ % (i)).replace("FIMD_INTERIOR_PTxx", "(((%d)*(IM_WIDTH))+(%d))" % (y, x)))
 
@@ -84,7 +84,7 @@ MARKER_TEST:
 
 //$ for i, (y, x) in enumerate(FIMD_BOUNDARY[1:]):
 //$     GEN_OUTPUT.append(("""
-    // boundary pixel %d, compare difference from central pixel
+    // boundary pixel #%d, compare difference from central pixel
     if (pix_val - (*((uint8_t*) (img_ptr + FIMD_BOUNDARY_PTxx))) <= FIMD_THRESHOLD_DIFF) goto LOOP;
 //$     """ % (i+1)).replace("FIMD_BOUNDARY_PTxx", "(((%d)*(IM_WIDTH))+(%d))" % (y, x)))
 
@@ -97,7 +97,7 @@ MARKER_TEST:
 
 //$ for i, (y, x) in enumerate(FIMD_INTERIOR):
 //$     GEN_OUTPUT.append(("""
-    // interior pixel %d compare with latest peak
+    // interior pixel #%d compare with latest peak
     curr_int_ptr = (uint8_t*) (img_ptr + FIMD_INTERIOR_PTxx);
     if (*curr_int_ptr > peak) {
         peak = *curr_int_ptr;
