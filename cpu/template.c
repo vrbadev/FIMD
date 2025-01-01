@@ -1,6 +1,6 @@
 //$ GEN_OUTPUT.append("""
 /**
- * \\file fast_r%d.c
+ * \\file fimd_r%d.c
  * \\author Vojtech Vrba (vrba.vojtech [at] fel.cvut.cz)
  * \\date December 2024
  * \\brief Generated source file for the FIMD-CPU library.
