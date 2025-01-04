@@ -1,12 +1,14 @@
 # FIMD: Fast Isolated Marker Detection
 
-This repository contains implementations of the FIMD for CPUs, GPUs and FPGAs. The CPU and GPU implementations can be compiled and run on Linux-based systems.
+This repository contains implementations of the FIMD for CPUs, GPUs and FPGAs. 
 
-| Folder | Description                                                                            |
-|--------|----------------------------------------------------------------------------------------|
-| cpu    | FIMD-CPU: C implementation optimised for low-power microcontrollers and embedded CPUs. |
-| gpu    | FIMD-GPU: C implementation for embedded GPUs (OpenGL 3.1 compute shader).              |
-| fpga   | FIMD-FPGA: VHDL implementation for low-end FPGA devices (ActiveHDL project).           |
+The CPU and GPU implementations can be compiled and run on Linux-based systems. The CPU implementation written in ARMv6 assembly can be compiled for low-power MCUs. The FPGA implementation in VHDL is available only as a project for the ActiveHDL simulator.
+
+| Folder | Description                                                                                |
+|--------|--------------------------------------------------------------------------------------------|
+| cpu    | FIMD-CPU: C/ASM implementation optimised for low-power microcontrollers and embedded CPUs. |
+| gpu    | FIMD-GPU: C implementation for embedded GPUs (OpenGL 3.1 compute shader).                  |
+| fpga   | FIMD-FPGA: VHDL implementation for low-end FPGA devices (ActiveHDL project).               |
 
 ## Usage (FIMD-CPU and FIMD-GPU)
 
