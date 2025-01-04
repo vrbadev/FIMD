@@ -9,6 +9,8 @@ The CPU and GPU implementations can be compiled and run on Linux-based systems. 
 | cpu    | FIMD-CPU: C/ASM implementation optimised for low-power microcontrollers and embedded CPUs. |
 | gpu    | FIMD-GPU: C implementation for embedded GPUs (OpenGL 3.1 compute shader).                  |
 | fpga   | FIMD-FPGA: VHDL implementation for low-end FPGA devices (ActiveHDL project).               |
+| min    | (Extra) Minimal C++20 implementation of the Fast Isolated Marker Detection (FIMD).         |
+
 
 ## Usage (FIMD-CPU and FIMD-GPU)
 
