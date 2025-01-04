@@ -16,6 +16,7 @@
 
 #include <list>
 
+namespace fimd {
 
 /**
  * \brief Alias for 2D points on an integer grid.
@@ -567,5 +568,6 @@ private:
     }
 };
 
+};
 
 #endif // FIMD_CPU_H

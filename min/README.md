@@ -28,11 +28,11 @@ unsigned max_markers_count = 30;
 unsigned max_sun_points_count = 300;
 
 // Prepare lists for detection results
-std::list<Point2D> markers;
-std::list<Point2D> sun_points;
+std::list<fimd::Point2D> markers;
+std::list<fimd::Point2D> sun_points;
 
 // Initialize the FIMD-CPU detector
-FIMD_CPU<radius> detector(im_width, im_height, threshold_center, threshold_diff, threshold_sun, termination, max_markers_count, max_sun_points_count);
+fimd::FIMD_CPU<radius> detector(im_width, im_height, threshold_center, threshold_diff, threshold_sun, termination, max_markers_count, max_sun_points_count);
 
 // Detect markers and sun points
 bool make_copy = true; // if no copy is created, the frame buffer will be modified
