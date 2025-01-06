@@ -2,7 +2,7 @@
 
 This directory contains a minimal C++ implementation of the FIMD approach (currently only for FIMD-CPU). The required C++ standard is C++20. The header file(s) should be included directly in the user's project. 
 
-The primary benefit of this approach is that Bresenham circles can be effortlessly generated using only C++20 templates, thereby eliminating the need for any Python pre-processing before compilation. However, since the circles are generated recursively, the template instantiation depth exceeds the maximum limit for larger radii. This limit can be increased using the `-ftemplate-depth=` compiler flag.
+The primary benefit of this approach is that Bresenham circles can be effortlessly generated using only C++20 templates, thereby eliminating the need for any Python pre-processing before compilation. However, since the circles are generated recursively, the recursion depth quickly exceeds the maximum for larger radii. The limits can be increased using the `-ftemplate-depth=` and `-fconstexpr-depth=` compiler flags.
 
 ## Usage example
 
