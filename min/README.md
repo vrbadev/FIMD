@@ -9,6 +9,8 @@ The primary benefit of this approach is that Bresenham circles can be effortless
 The following block of code demonstrates how to use the implementation in a C++ project:
 
 ```c++
+#include <fstream>
+#include <vector>
 #include "fimd_cpu.hpp"
 
 // Load sample binary frame data
