@@ -9,12 +9,13 @@
 #ifndef FIMD_CPU_HPP
 #define FIMD_CPU_HPP
 
-#include <iostream>
-#include <type_traits>
 #include <array>
 #include <cstdlib>
-
+#include <iostream>
+#include <limits>
 #include <list>
+#include <type_traits>
+
 
 namespace fimd {
 
@@ -433,8 +434,8 @@ public:
     : im_width_(im_width), im_height_(im_height), threshold_center_(threshold_center), threshold_diff_(threshold_diff), threshold_sun_(threshold_sun), termination_(termination)
     {
         offset_ = (im_width_ * RADIUS) + RADIUS;
-        max_markers_count_ = (max_markers_count == 0) ? im_width_ * im_height_ : max_markers_count;
-        max_sun_points_count_ = (max_sun_points_count == 0) ? im_width_ * im_height_ : max_sun_points_count;
+        max_markers_count_ = (max_markers_count == 0) ? std::numeric_limits<unsigned>::max() : max_markers_count;
+        max_sun_points_count_ = (max_sun_points_count == 0) ? std::numeric_limits<unsigned>::max() : max_sun_points_count;
         frame_ = alloc_frame ? static_cast<PIXEL*>(std::malloc(im_width_ * im_height_ * sizeof(PIXEL))) : nullptr;
     };
 
@@ -563,22 +564,11 @@ public:
     void set_im_size(unsigned im_width, unsigned im_height) {
         im_width_ = im_width;
         im_height_ = im_height;
+        offset_ = (im_width_ * RADIUS) + RADIUS;
         if (frame_ != nullptr) {
             frame_ = static_cast<PIXEL*>(std::realloc(frame_, im_width_ * im_height_ * sizeof(PIXEL)));
         }
     }
-
-    /**
-     * \brief Gets the offset value.
-     * \return The offset value.
-     */
-    unsigned get_offset() const { return offset_; }
-
-    /**
-     * \brief Sets the offset value.
-     * \param offset The new offset value.
-     */
-    void set_offset(unsigned offset) { offset_ = offset; }
 
     /**
      * \brief Gets the center threshold value.
@@ -636,9 +626,9 @@ public:
 
     /**
      * \brief Sets the maximum number of markers to detect.
-     * \param max_markers_count The new maximum number of markers.
+     * \param max_markers_count The new maximum number of markers. 0 for no limit.
      */
-    void set_max_markers_count(unsigned max_markers_count) { max_markers_count_ = max_markers_count; }
+    void set_max_markers_count(unsigned max_markers_count) { max_markers_count_ = (max_markers_count == 0) ? std::numeric_limits<unsigned>::max() : max_markers_count; }
 
     /**
      * \brief Gets the maximum number of sun points to detect.
@@ -648,9 +638,9 @@ public:
 
     /**
      * \brief Sets the maximum number of sun points to detect.
-     * \param max_sun_points_count The new maximum number of sun points.
+     * \param max_sun_points_count The new maximum number of sun points. 0 for no limit.
      */
-    void set_max_sun_points_count(unsigned max_sun_points_count) { max_sun_points_count_ = max_sun_points_count; }
+    void set_max_sun_points_count(unsigned max_sun_points_count) { max_sun_points_count_ = (max_sun_points_count == 0) ? std::numeric_limits<unsigned>::max() : max_sun_points_count; }
 
 private:
     unsigned im_width_;
@@ -662,7 +652,7 @@ private:
     TERM_SEQ termination_;
     unsigned max_markers_count_;
     unsigned max_sun_points_count_;
-    PIXEL* frame_;
+    PIXEL* frame_ = nullptr;
 
     static constexpr auto boundary = BresenhamBoundary<RADIUS>();
     static constexpr auto interior = BresenhamInterior<RADIUS>();
