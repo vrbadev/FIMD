@@ -23,7 +23,6 @@ namespace fimd {
  */
 using Point2D = std::array<int, 2>;
 
-
 /**
  * \brief Computes the integer square root of a number at compile-time.
  * \param x The number to compute the square root of.
@@ -32,7 +31,8 @@ using Point2D = std::array<int, 2>;
  * \return The integer square root of x.
  */
 static consteval unsigned sqrt_recursive(const unsigned x, const unsigned lo, const unsigned hi) {
-    return (lo == hi) ? lo : ((x / ((lo + hi + 1) / 2) < ((lo + hi + 1) / 2)) ? sqrt_recursive(x, lo, ((lo + hi + 1) / 2) - 1) : sqrt_recursive(x, ((lo + hi + 1) / 2), hi));
+    const unsigned mid = (lo + hi + 1) / 2;
+    return (lo == hi) ? lo : ((x / mid < mid) ? sqrt_recursive(x, lo, mid - 1) : sqrt_recursive(x, mid, hi));
 }
 
 
@@ -390,6 +390,24 @@ private:
 };
 
 
+
+/**
+ * \brief Converts a 2D point to a 1D coordinate.
+ * \param point The 2D point.
+ * \param im_width Image width.
+ * \return The 1D coordinate.
+ */
+inline int coord2to1(Point2D point, unsigned im_width) { return (point[1] * im_width) + point[0]; };
+
+/**
+ * \brief Converts a 1D coordinate to a 2D point.
+ * \param coord1d The 1D coordinate.
+ * \param im_width Image width.
+ * \return The 2D point.
+ */
+inline Point2D coord2to1(int coord1d, unsigned im_width) { return Point2D{static_cast<int>(coord1d % im_width), static_cast<int>(coord1d / im_width)}; };
+
+
 /**
  * \brief Fast Isolated Marker Detection (FIMD) CPU implementation.
  * \tparam RADIUS Radius of the circle.
@@ -403,38 +421,34 @@ public:
      * \brief FIMD-CPU constructor.
      * \param im_width Image width.
      * \param im_height Image height.
-     * \param threshold_center Center threshold.
-     * \param threshold_diff Difference threshold.
-     * \param threshold_sun Sun threshold.
-     * \param termination Termination sequence (2 bytes).
+     * \param threshold_center Center (marker) threshold value.
+     * \param threshold_diff Difference threshold value.
+     * \param threshold_sun Sun threshold value.
+     * \param termination Termination sequence (array of pixels).
      * \param max_markers_count Limit for the number of the detected markers (0 for no limit).
      * \param max_sun_points_count Limit for the number of the detected sun points (0 for no limit).
+     * \param alloc_frame If true, the frame buffer will be allocated during initialization.
      */
-    FIMD_CPU(unsigned im_width, unsigned im_height, PIXEL threshold_center=120, PIXEL threshold_diff=60, PIXEL threshold_sun=240, TERM_SEQ termination={0xFF, 0x00}, unsigned max_markers_count=0, unsigned max_sun_points_count=0)
+    FIMD_CPU(unsigned im_width, unsigned im_height, PIXEL threshold_center=120, PIXEL threshold_diff=60, PIXEL threshold_sun=240, TERM_SEQ termination={0xFF, 0x00}, unsigned max_markers_count=0, unsigned max_sun_points_count=0, bool alloc_frame=true)
     : im_width_(im_width), im_height_(im_height), threshold_center_(threshold_center), threshold_diff_(threshold_diff), threshold_sun_(threshold_sun), termination_(termination)
     {
         offset_ = (im_width_ * RADIUS) + RADIUS;
         max_markers_count_ = (max_markers_count == 0) ? im_width_ * im_height_ : max_markers_count;
         max_sun_points_count_ = (max_sun_points_count == 0) ? im_width_ * im_height_ : max_sun_points_count;
-        frame_ = static_cast<PIXEL*>(std::malloc(im_width_ * im_height_ * sizeof(PIXEL)));
+        frame_ = alloc_frame ? static_cast<PIXEL*>(std::malloc(im_width_ * im_height_ * sizeof(PIXEL))) : nullptr;
     };
 
     ~FIMD_CPU() {
-        std::free(frame_);
+        if (frame_ != nullptr) {
+            std::free(frame_);
+        }
     };
-
-    /**
-     * \brief Converts a 2D point to a 1D coordinate.
-     * \param point The 2D point.
-     * \return The 1D coordinate.
-     */
-    [[nodiscard]] int coord1d(Point2D point) const { return (point[1] * static_cast<int>(im_width_)) + point[0]; };
 
     /**
      * \brief Detects markers and sun points in an image.
      * \param image The image data (array of pixels).
-     * \param markers The list of detected markers.
-     * \param sun_points The list of detected sun points.
+     * \param markers The list of detected markers (2D points).
+     * \param sun_points The list of detected sun points (2D points).
      * \param make_copy If true, a copy of the input image will be used in the detection process.
      * \return The total number of processed pixels in the input image.
      */
@@ -442,17 +456,18 @@ public:
         PIXEL* target_image;
 
         if (make_copy) {
+            if (frame_ == nullptr) {
+                frame_ = static_cast<PIXEL*>(std::malloc(im_width_ * im_height_ * sizeof(PIXEL)));
+            }
             std::copy_n(image, im_height_ * im_width_, frame_);
             target_image = frame_;
         } else {
             target_image = image;
         }
 
+        // write the termination sequence to the image
         *reinterpret_cast<TERM_SEQ*>((target_image) + (im_width_ * im_height_) - sizeof(TERM_SEQ)) = termination_;
         PIXEL* cursor = target_image + offset_ - 1;
-
-        int marker_x, marker_y;
-        int sun_point_x, sun_point_y;
 
         LOOP:
             // check for the presence of the termination sequence
@@ -465,7 +480,7 @@ public:
             if (pix_val <= threshold_center_) goto LOOP;
 
             // first boundary pixel test - decide between MARKER_TEST and SUN_TEST
-            if ((pix_val - *(cursor + coord1d(boundary[0]))) <= threshold_diff_) {
+            if ((pix_val - *(cursor + coord2to1(boundary[0], im_width_))) <= threshold_diff_) {
                 if (pix_val >= threshold_sun_) goto SUN_TEST;
             } else {
                 goto MARKER_TEST;
@@ -475,20 +490,19 @@ public:
             goto LOOP;
 
         SUN_TEST:
-            // testing for boundary pixels
+            // testing of the boundary pixels
             if (boundary_unroll([&](const Point2D point) -> bool {
-                return (pix_val - *(cursor + coord1d(point))) > threshold_diff_;
+                return (pix_val - *(cursor + coord2to1(point, im_width_))) > threshold_diff_;
             })) goto LOOP;
 
             // clearing interior pixels
             interior_unroll([&](const Point2D point) -> bool {
-                *(cursor + coord1d(point)) = 0x00;
+                *(cursor + coord2to1(point, im_width_)) = 0x00;
                 return false;
             });
 
-            sun_point_x = (reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image)) % im_width_;
-            sun_point_y = (reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image)) / im_width_;
-            sun_points.push_back({sun_point_x, sun_point_y});
+            // store the center as a sun point
+            sun_points.push_back(coord2to1(reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image), im_width_));
 
             // check the current number of the detected sun points
             if (sun_points.size() == max_sun_points_count_) {
@@ -497,18 +511,18 @@ public:
             goto LOOP;
 
         MARKER_TEST:
-            // testing for boundary pixels
+            // testing of the boundary pixels
             if (boundary_unroll([&](const Point2D point) -> bool {
-                return (pix_val - *(cursor + coord1d(point))) <= threshold_diff_;
+                return (pix_val - *(cursor + coord2to1(point, im_width_))) <= threshold_diff_;
             })) goto LOOP;
 
-            // search for peak in interior
+            // search for a peak in the interior
             PIXEL peak = 0;
             size_t peak_pos = 0;
             PIXEL* curr_int_ptr = nullptr;
 
             interior_unroll([&](const Point2D point) -> bool {
-                curr_int_ptr = cursor + coord1d(point);
+                curr_int_ptr = cursor + coord2to1(point, im_width_);
                 if (*curr_int_ptr > peak) {
                     peak = *curr_int_ptr;
                     peak_pos = reinterpret_cast<size_t>(curr_int_ptr) - reinterpret_cast<size_t>(target_image);
@@ -517,9 +531,8 @@ public:
                 return false;
             });
 
-            marker_x = peak_pos % im_width_;
-            marker_y = peak_pos / im_width_;
-            markers.push_back({marker_x, marker_y});
+            // store the detected peak as a marker
+            markers.push_back(coord2to1(peak_pos, im_width_));
 
             // check the current number of the detected markers
             if (markers.size() == max_markers_count_) {
@@ -529,6 +542,115 @@ public:
 
         return 0;
     };
+
+    /**
+     * \brief Gets the image width.
+     * \return The width of the image.
+     */
+    unsigned get_im_width() const { return im_width_; }
+
+    /**
+     * \brief Gets the image height.
+     * \return The height of the image.
+     */
+    unsigned get_im_height() const { return im_height_; }
+
+    /**
+     * \brief Sets the image size.
+     * \param im_width The new width of the image.
+     * \param im_height The new height of the image.
+     */
+    void set_im_size(unsigned im_width, unsigned im_height) {
+        im_width_ = im_width;
+        im_height_ = im_height;
+        if (frame_ != nullptr) {
+            frame_ = static_cast<PIXEL*>(std::realloc(frame_, im_width_ * im_height_ * sizeof(PIXEL)));
+        }
+    }
+
+    /**
+     * \brief Gets the offset value.
+     * \return The offset value.
+     */
+    unsigned get_offset() const { return offset_; }
+
+    /**
+     * \brief Sets the offset value.
+     * \param offset The new offset value.
+     */
+    void set_offset(unsigned offset) { offset_ = offset; }
+
+    /**
+     * \brief Gets the center threshold value.
+     * \return The center threshold value.
+     */
+    PIXEL get_threshold_center() const { return threshold_center_; }
+
+    /**
+     * \brief Sets the center threshold value.
+     * \param threshold_center The new center threshold value.
+     */
+    void set_threshold_center(PIXEL threshold_center) { threshold_center_ = threshold_center; }
+
+    /**
+     * \brief Gets the difference threshold value.
+     * \return The difference threshold value.
+     */
+    PIXEL get_threshold_diff() const { return threshold_diff_; }
+
+    /**
+     * \brief Sets the difference threshold value.
+     * \param threshold_diff The new difference threshold value.
+     */
+    void set_threshold_diff(PIXEL threshold_diff) { threshold_diff_ = threshold_diff; }
+
+    /**
+     * \brief Gets the sun threshold value.
+     * \return The sun threshold value.
+     */
+    PIXEL get_threshold_sun() const { return threshold_sun_; }
+
+    /**
+     * \brief Sets the sun threshold value.
+     * \param threshold_sun The new sun threshold value.
+     */
+    void set_threshold_sun(PIXEL threshold_sun) { threshold_sun_ = threshold_sun; }
+
+    /**
+     * \brief Gets the termination sequence.
+     * \return The termination sequence.
+     */
+    TERM_SEQ get_termination() const { return termination_; }
+
+    /**
+     * \brief Sets the termination sequence.
+     * \param termination The new termination sequence.
+     */
+    void set_termination(TERM_SEQ termination) { termination_ = termination; }
+
+    /**
+     * \brief Gets the maximum number of markers to detect.
+     * \return The maximum number of markers.
+     */
+    unsigned get_max_markers_count() const { return max_markers_count_; }
+
+    /**
+     * \brief Sets the maximum number of markers to detect.
+     * \param max_markers_count The new maximum number of markers.
+     */
+    void set_max_markers_count(unsigned max_markers_count) { max_markers_count_ = max_markers_count; }
+
+    /**
+     * \brief Gets the maximum number of sun points to detect.
+     * \return The maximum number of sun points.
+     */
+    unsigned get_max_sun_points_count() const { return max_sun_points_count_; }
+
+    /**
+     * \brief Sets the maximum number of sun points to detect.
+     * \param max_sun_points_count The new maximum number of sun points.
+     */
+    void set_max_sun_points_count(unsigned max_sun_points_count) { max_sun_points_count_ = max_sun_points_count; }
 
 private:
     unsigned im_width_;
