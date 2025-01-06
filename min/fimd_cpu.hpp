@@ -145,7 +145,8 @@ public:
 
     static std::ostream& print_verbose(std::ostream& os) {
         os << "[Bresenham boundary for R=" << radius() << "]" << std::endl;
-        os << "Quadrant length: " << length() << std::endl;
+        os << "Quadrant length: " << length_quadrant() << " (estimated: " << length_quadrant_estimation() << ")" << std::endl;
+        os << "Total boundary length: " << length() << std::endl;
         os << "Compile-time generation:" << std::endl;
         return print_recursive(os, BresenhamBoundaryInit<R>());
     }
