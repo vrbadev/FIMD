@@ -35,6 +35,8 @@ std::list<fimd::Point2D> sun_points;
 
 // Initialize the FIMD-CPU detector
 fimd::FIMD_CPU<radius> detector(im_width, im_height, threshold_center, threshold_diff, threshold_sun, termination, max_markers_count, max_sun_points_count);
+detector.print_boundary(std::cout);
+detector.print_interior(std::cout);
 
 // Detect markers and sun points
 bool make_copy = true; // if no copy is created, the frame buffer will be modified

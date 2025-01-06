@@ -144,13 +144,15 @@ public:
     };
 
     static std::ostream& print_verbose(std::ostream& os) {
-        os << "Bresenham boundary for R=" << radius() << ": quadrant length = " << length() << std::endl;
+        os << "[Bresenham boundary for R=" << radius() << "]" << std::endl;
+        os << "Quadrant length: " << length() << std::endl;
+        os << "Compile-time generation:" << std::endl;
         return print_recursive(os, BresenhamBoundaryInit<R>());
     }
 
-    constexpr std::ostream& print_sorted(std::ostream& os) {
-        os << "Sorted points (" << length() << "): [";
-        for (auto point : *this) {
+    static std::ostream& print_sorted(std::ostream& os, const BresenhamBoundary boundary) {
+        os << "Sorted points:" << std::endl << "[";
+        for (Point2D point : boundary) {
             os << "(" << point[0] << "," << point[1] << "), ";
         }
         os << "\b\b]" << std::endl;
@@ -359,7 +361,9 @@ public:
     };
 
     static std::ostream& print_verbose(std::ostream& os) {
-        os << "Bresenham interior for R=" << radius() << ": half length = " << length() << std::endl;
+        os << "[Bresenham interior for R=" << radius() << "]" << std::endl;
+        os << "Half area (length): " << length() << std::endl;
+        os << "Compile-time generation:" << std::endl;
         return print_recursive(os, BresenhamInteriorInit<R>());
     }
 
@@ -641,6 +645,23 @@ public:
      * \param max_sun_points_count The new maximum number of sun points. 0 for no limit.
      */
     void set_max_sun_points_count(unsigned max_sun_points_count) { max_sun_points_count_ = (max_sun_points_count == 0) ? std::numeric_limits<unsigned>::max() : max_sun_points_count; }
+
+    /**
+     * \brief Prints the boundary points of the Bresenham circle.
+     * \param os The output stream to print to (stdout by default).
+     */
+    void print_boundary(std::ostream &os=std::cout) {
+        boundary.print_verbose(os);
+        boundary.print_sorted(os, boundary);
+    }
+
+    /**
+     * \brief Prints the interior points of the Bresenham circle.
+     * \param os The output stream to print to (stdout by default).
+     */
+    void print_interior(std::ostream &os=std::cout) {
+        interior.print_verbose(os);
+    }
 
 private:
     unsigned im_width_;
