@@ -411,7 +411,7 @@ inline int coord2to1(Point2D point, unsigned im_width) { return (point[1] * im_w
  * \param im_width Image width.
  * \return The 2D point.
  */
-inline Point2D coord1to2(int coord1d, unsigned im_width) { return Point2D{static_cast<int>(coord1d % im_width), static_cast<int>(coord1d / im_width)}; };
+inline Point2D coord1to2(size_t coord1d, unsigned im_width) { return Point2D{static_cast<int>(coord1d % im_width), static_cast<int>(coord1d / im_width)}; };
 
 
 /**

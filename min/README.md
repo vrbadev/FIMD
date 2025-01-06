@@ -25,7 +25,7 @@ constexpr unsigned radius = 3; // must be known at compile time
 unsigned char threshold_center = 120;
 unsigned char threshold_diff = 60;
 unsigned char threshold_sun = 240;
-unsigned short termination = 0x00FF;
+auto termination = std::array<unsigned char, 2>{0xFF, 0x00};
 unsigned max_markers_count = 30;
 unsigned max_sun_points_count = 300;
 
