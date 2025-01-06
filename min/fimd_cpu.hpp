@@ -6,8 +6,8 @@
  * \copyright GNU Public License.
  */
 
-#ifndef FIMD_CPU_H
-#define FIMD_CPU_H
+#ifndef FIMD_CPU_HPP
+#define FIMD_CPU_HPP
 
 #include <iostream>
 #include <type_traits>
@@ -448,11 +448,6 @@ public:
         *reinterpret_cast<unsigned short*>((target_image) + (im_width_ * im_height_) - 2) = termination_;
         unsigned char* cursor = target_image + offset_ - 1;
 
-        /*boundary_unroll([&](const Point2D point) -> bool {
-            std::cout << "Boundary point: " << point[0] << ", " << point[1] << " -> " << coord1d(point) << std::endl;
-            return false;
-        });*/
-
         int sun_point_x, sun_point_y;
         int marker_x, marker_y;
 
@@ -570,4 +565,4 @@ private:
 
 };
 
-#endif // FIMD_CPU_H
+#endif // FIMD_CPU_HPP
