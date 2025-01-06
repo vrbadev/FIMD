@@ -393,8 +393,10 @@ private:
 /**
  * \brief Fast Isolated Marker Detection (FIMD) CPU implementation.
  * \tparam RADIUS Radius of the circle.
+ * \tparam PIXEL Type of the pixel data (unsigned char by default).
+ * \tparam TERM_SEQ Type defining the array of pixels used for the termination sequence (array of 2 PIXEL values by default).
  */
-template<unsigned RADIUS>
+template<unsigned RADIUS, typename PIXEL=unsigned char, typename TERM_SEQ=std::array<PIXEL, 2>>
 class FIMD_CPU {
 public:
     /**
@@ -408,13 +410,13 @@ public:
      * \param max_markers_count Limit for the number of the detected markers (0 for no limit).
      * \param max_sun_points_count Limit for the number of the detected sun points (0 for no limit).
      */
-    FIMD_CPU(unsigned im_width, unsigned im_height, unsigned char threshold_center=120, unsigned char threshold_diff=60, unsigned char threshold_sun=240, unsigned short termination=0x00FF, unsigned max_markers_count=0, unsigned max_sun_points_count=0)
+    FIMD_CPU(unsigned im_width, unsigned im_height, PIXEL threshold_center=120, PIXEL threshold_diff=60, PIXEL threshold_sun=240, TERM_SEQ termination={0xFF, 0x00}, unsigned max_markers_count=0, unsigned max_sun_points_count=0)
     : im_width_(im_width), im_height_(im_height), threshold_center_(threshold_center), threshold_diff_(threshold_diff), threshold_sun_(threshold_sun), termination_(termination)
     {
         offset_ = (im_width_ * RADIUS) + RADIUS;
         max_markers_count_ = (max_markers_count == 0) ? im_width_ * im_height_ : max_markers_count;
         max_sun_points_count_ = (max_sun_points_count == 0) ? im_width_ * im_height_ : max_sun_points_count;
-        frame_ = static_cast<unsigned char*>(std::malloc(im_width_ * im_height_ * sizeof(unsigned char)));
+        frame_ = static_cast<PIXEL*>(std::malloc(im_width_ * im_height_ * sizeof(PIXEL)));
     };
 
     ~FIMD_CPU() {
@@ -430,14 +432,15 @@ public:
 
     /**
      * \brief Detects markers and sun points in an image.
-     * \param image The image data (array of unsigned bytes).
+     * \param image The image data (array of pixels).
      * \param markers The list of detected markers.
      * \param sun_points The list of detected sun points.
      * \param make_copy If true, a copy of the input image will be used in the detection process.
      * \return The total number of processed pixels in the input image.
      */
-    unsigned detect(unsigned char* image, std::list<Point2D> &markers, std::list<Point2D> &sun_points, bool make_copy=true) {
-        unsigned char* target_image;
+    unsigned detect(PIXEL* image, std::list<Point2D> &markers, std::list<Point2D> &sun_points, bool make_copy=true) {
+        PIXEL* target_image;
+
         if (make_copy) {
             std::copy_n(image, im_height_ * im_width_, frame_);
             target_image = frame_;
@@ -445,20 +448,20 @@ public:
             target_image = image;
         }
 
-        *reinterpret_cast<unsigned short*>((target_image) + (im_width_ * im_height_) - 2) = termination_;
-        unsigned char* cursor = target_image + offset_ - 1;
+        *reinterpret_cast<TERM_SEQ*>((target_image) + (im_width_ * im_height_) - sizeof(TERM_SEQ)) = termination_;
+        PIXEL* cursor = target_image + offset_ - 1;
 
-        int sun_point_x, sun_point_y;
         int marker_x, marker_y;
+        int sun_point_x, sun_point_y;
 
         LOOP:
             // check for the presence of the termination sequence
-            if (*reinterpret_cast<unsigned short*>((cursor) + offset_) == termination_) {
+            if (*reinterpret_cast<TERM_SEQ*>((cursor) + offset_) == termination_) {
                 return (reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image));
             }
 
             // load new pixel value from pre-incremented address
-            unsigned char pix_val = *(++cursor);
+            PIXEL pix_val = *(++cursor);
             if (pix_val <= threshold_center_) goto LOOP;
 
             // first boundary pixel test - decide between MARKER_TEST and SUN_TEST
@@ -489,7 +492,7 @@ public:
 
             // check the current number of the detected sun points
             if (sun_points.size() == max_sun_points_count_) {
-                *reinterpret_cast<unsigned short*>((cursor) + offset_) = termination_;
+                *reinterpret_cast<TERM_SEQ*>((cursor) + offset_) = termination_;
             }
             goto LOOP;
 
@@ -500,9 +503,9 @@ public:
             })) goto LOOP;
 
             // search for peak in interior
-            unsigned char peak = 0;
+            PIXEL peak = 0;
             size_t peak_pos = 0;
-            unsigned char* curr_int_ptr = nullptr;
+            PIXEL* curr_int_ptr = nullptr;
 
             interior_unroll([&](const Point2D point) -> bool {
                 curr_int_ptr = cursor + coord1d(point);
@@ -520,7 +523,7 @@ public:
 
             // check the current number of the detected markers
             if (markers.size() == max_markers_count_) {
-                *reinterpret_cast<unsigned short*>((cursor) + offset_) = termination_;
+                *reinterpret_cast<TERM_SEQ*>((cursor) + offset_) = termination_;
             }
             goto LOOP;
 
@@ -531,13 +534,13 @@ private:
     unsigned im_width_;
     unsigned im_height_;
     unsigned offset_;
-    unsigned char threshold_center_;
-    unsigned char threshold_diff_;
-    unsigned char threshold_sun_;
-    unsigned short termination_;
+    PIXEL threshold_center_;
+    PIXEL threshold_diff_;
+    PIXEL threshold_sun_;
+    TERM_SEQ termination_;
     unsigned max_markers_count_;
     unsigned max_sun_points_count_;
-    unsigned char* frame_;
+    PIXEL* frame_;
 
     static constexpr auto boundary = BresenhamBoundary<RADIUS>();
     static constexpr auto interior = BresenhamInterior<RADIUS>();
