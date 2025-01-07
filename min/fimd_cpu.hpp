@@ -549,9 +549,6 @@ public:
                 *reinterpret_cast<TERM_SEQ*>((cursor) + offset_ - sizeof(TERM_SEQ)) = termination_;
             }
             goto LOOP;
-
-        DONE:
-            return reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image) - offset_;
     };
 
     /**
