@@ -40,5 +40,5 @@ detector.print_interior(std::cout);
 
 // Detect markers and sun points
 bool make_copy = true; // if no copy is created, the frame buffer will be modified
-detector.detect(buffer.data(), markers, sun_points, make_copy);
+unsigned num_processed = detector.detect(buffer.data(), markers, sun_points, make_copy);
 ```

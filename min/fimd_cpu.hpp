@@ -459,6 +459,10 @@ public:
      * \return The total number of processed pixels in the input image.
      */
     unsigned detect(PIXEL* image, std::list<Point2D> &markers, std::list<Point2D> &sun_points, bool make_copy=true) {
+        if (im_width_ < (2*RADIUS+1) or im_height_ < (2*RADIUS+1)) {
+            return 0;
+        }
+
         PIXEL* target_image;
 
         if (make_copy) {
@@ -473,12 +477,12 @@ public:
 
         // write the termination sequence to the image
         *reinterpret_cast<TERM_SEQ*>((target_image) + (im_width_ * im_height_) - sizeof(TERM_SEQ)) = termination_;
-        PIXEL* cursor = target_image + offset_ - 1;
+        PIXEL* cursor = target_image + offset_;
 
         LOOP:
             // check for the presence of the termination sequence
-            if (*reinterpret_cast<TERM_SEQ*>((cursor) + offset_) == termination_) {
-                return (reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image));
+            if (*reinterpret_cast<TERM_SEQ*>((cursor) + offset_ - sizeof(TERM_SEQ)) == termination_) {
+                return reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image) - offset_;
             }
 
             // load new pixel value from pre-incremented address
@@ -512,7 +516,7 @@ public:
 
             // check the current number of the detected sun points
             if (sun_points.size() == max_sun_points_count_) {
-                *reinterpret_cast<TERM_SEQ*>((cursor) + offset_) = termination_;
+                *reinterpret_cast<TERM_SEQ*>((cursor) + offset_ - sizeof(TERM_SEQ)) = termination_;
             }
             goto LOOP;
 
@@ -542,11 +546,12 @@ public:
 
             // check the current number of the detected markers
             if (markers.size() == max_markers_count_) {
-                *reinterpret_cast<TERM_SEQ*>((cursor) + offset_) = termination_;
+                *reinterpret_cast<TERM_SEQ*>((cursor) + offset_ - sizeof(TERM_SEQ)) = termination_;
             }
             goto LOOP;
 
-        return 0;
+        DONE:
+            return reinterpret_cast<size_t>(cursor) - reinterpret_cast<size_t>(target_image) - offset_;
     };
 
     /**
