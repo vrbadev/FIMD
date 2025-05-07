@@ -21,5 +21,21 @@ Clone this repository (a CLion project) and add its top directory as a subdirect
 The related dataset of raw camera frames is available at [our MRS NAS server](https://nasmrs.felk.cvut.cz/index.php/s/AtyqwaS4VOC1EYG). It contains 83914 camera frames of 752x480 resolution in 8-bit binary format (grayscale).
 
 ## Citation
-(To be added.)
 
+If you use this code in your research or project, please cite [our paper](https://doi.org/10.1007/s10514-025-10197-5):
+
+```
+@article{Vrba2025,
+  title = {FIMD: fast isolated marker detection for UV-based visual relative localisation in agile UAV swarms},
+  volume = {49},
+  ISSN = {1573-7527},
+  url = {http://dx.doi.org/10.1007/s10514-025-10197-5},
+  DOI = {10.1007/s10514-025-10197-5},
+  number = {2},
+  journal = {Autonomous Robots},
+  publisher = {Springer Science and Business Media LLC},
+  author = {Vrba,  Vojtěch and Walter,  Viktor and Štěpán,  Petr and Saska,  Martin},
+  year = {2025},
+  month = may 
+}
+```
