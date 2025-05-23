@@ -14,6 +14,8 @@
 #include <stdint.h>
 
 struct fimd_gpu_config_s {
+    uint32_t image_width;
+    uint32_t image_height;
     uint32_t threshold;
     uint32_t threshold_diff;
     uint32_t threshold_sun;

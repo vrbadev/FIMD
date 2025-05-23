@@ -84,3 +84,7 @@ fabric.properties
 
 # Library output directory
 lib/
+
+Makefile
+cmake_install.cmake
+CMakeFiles/

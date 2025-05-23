@@ -3,15 +3,17 @@
 
 //%s layout (local_size_x = %d, local_size_y = %d, local_size_z = 1) in;
 
-layout(rgba8ui, binding = 0) readonly uniform highp uimage2D image_in;
+layout(std430, binding = 1) buffer image_in_buffer { uint image_in_array[]; };
 
 layout(binding = 2, offset = 0) uniform atomic_uint sun_pts_count;
 layout(binding = 3, offset = 0) uniform atomic_uint markers_count;
 
-layout(std430, binding = 4) buffer configuration_buffer { uint configuration[];};
-layout(std430, binding = 5) buffer markers_buffer { uint markers[];};
-layout(std430, binding = 6) buffer sun_pts_buffer { uint sun_pts[];};
+layout(std430, binding = 4) buffer configuration_buffer { uint configuration[]; };
+layout(std430, binding = 5) buffer markers_buffer { uint markers[]; };
+layout(std430, binding = 6) buffer sun_pts_buffer { uint sun_pts[]; };
 
+uint image_width = 0U;
+uint image_height = 0U;
 uint config_threshold = 0U;
 uint config_threshold_diff = 0U;
 uint config_threshold_sun = 0U;
@@ -106,6 +108,14 @@ ivec2 bresenham_circle_next_pt()
     return ivec2(-1, -1);
 }
 
+int get_pixel(ivec2 pos)
+{
+    int lin_pos = pos.y * image_size.x + pos.x;
+    int uint_pos = lin_pos / 4;
+    int byte_pos = lin_pos % 4;
+    return int((image_in_array[uint_pos] >> (8 * byte_pos)) & uint(0xFF));
+}
+
 int run_fimd(int radius)
 {
     int val;
@@ -117,7 +127,7 @@ int run_fimd(int radius)
     pos = bresenham_circle_next_pt();
 
     while (pos.x >= 0 && pos.x < image_size.x && pos.y >= 0 && pos.y < image_size.y) {
-        val = int(imageLoad(image_in, pos).r);
+        val = get_pixel(pos); //int(imageLoad(image_in, pos).r);
         if (val > boundary_max) { boundary_max = val; }
         if (val < boundary_min) { boundary_min = val; }
         pos = bresenham_circle_next_pt();
@@ -136,28 +146,28 @@ int run_fimd(int radius)
 
 void main()
 {
-    config_max_markers_count = configuration[3];
-    config_max_sun_pts_count = configuration[4];
+    image_width = configuration[0];
+    image_height = configuration[1];
+    config_threshold = configuration[2];
+    config_threshold_diff = configuration[3];
+    config_threshold_sun = configuration[4];
+    config_max_markers_count = configuration[5];
+    config_max_sun_pts_count = configuration[6];
+    config_radii_count = configuration[7];
 
     if (atomicCounter(markers_count) >= uint(config_max_markers_count) || atomicCounter(sun_pts_count) >= uint(config_max_sun_pts_count)) { return; }
 
-    config_threshold = configuration[0];
-    config_threshold_diff = configuration[1];
-    config_threshold_sun = configuration[2];
-    config_radii_count = configuration[5];
-
-    image_size = imageSize(image_in);
+    image_size = ivec2(image_width, image_height);
     center_pos = ivec2(gl_GlobalInvocationID.xy);
 
-    //center_val = int((imageLoad(image_in, center_pos).r) & (imageLoad(mask, center_pos).r));
-    center_val = int((imageLoad(image_in, center_pos).r));
+    center_val = get_pixel(center_pos);
     
     uint index;
     int i, radius;
     bool detected = false;
     if (center_val >= int(config_threshold)) {
         for (i = 0; i < int(config_radii_count); i++) {
-            radius = int(configuration[6 + i]);
+            radius = int(configuration[8 + i]);
             if (atomicCounter(markers_count) >= uint(config_max_markers_count) || atomicCounter(sun_pts_count) >= uint(config_max_sun_pts_count)) { return; }
             switch (run_fimd(radius)) {
                 case FIMD_RESULT_MARKER:

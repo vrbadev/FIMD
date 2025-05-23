@@ -20,7 +20,7 @@ static unsigned int max_local_size_x, max_local_size_y, max_local_size_z;
 struct fimd_gpu_inst_s {
     compute_lib_instance_t compute_lib;
     compute_lib_program_t compute_prog;
-    compute_lib_image2d_t image_in;
+    compute_lib_ssbo_t image_in_ssbo;
     compute_lib_acbo_t markers_count_acbo, sun_pts_count_acbo;
     compute_lib_ssbo_t configuration_ssbo, markers_ssbo, sun_pts_ssbo;
     uint32_t local_size_x, local_size_y;
@@ -39,6 +39,8 @@ fimd_gpu_t* fimd_gpu_init(unsigned image_width, unsigned image_height, unsigned 
     }
 
     handle->config = (struct fimd_gpu_config_s) {
+        .image_width = image_width,
+        .image_height = image_height,
         .max_markers_count = max_markers_count,
         .max_sun_pts_count = max_sun_pts_count,
         .threshold = threshold,
@@ -96,9 +98,8 @@ fimd_gpu_t* fimd_gpu_init(unsigned image_width, unsigned image_height, unsigned 
     }
 
     // initialize shader program and resources
-    fimd_gpu_inst->image_in = COMPUTE_LIB_IMAGE2D_NEW("image_in", GL_TEXTURE0, image_width, image_height, GL_READ_ONLY, 4, GL_UNSIGNED_BYTE);
-    fimd_gpu_inst->image_in.resource.value = 0;
-    compute_lib_image2d_setup_format(&(fimd_gpu_inst->image_in));
+    fimd_gpu_inst->image_in_ssbo = COMPUTE_LIB_SSBO_NEW("image_in_buffer", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
+    fimd_gpu_inst->image_in_ssbo.resource.value = 1;
 
     fimd_gpu_inst->sun_pts_count_acbo = COMPUTE_LIB_ACBO_NEW("sun_pts_count", GL_UNSIGNED_INT, GL_DYNAMIC_DRAW);
     fimd_gpu_inst->sun_pts_count_acbo.resource.value = 2;
@@ -129,10 +130,10 @@ fimd_gpu_t* fimd_gpu_init(unsigned image_width, unsigned image_height, unsigned 
         fimd_gpu_destroy(handle);
         return NULL;
     }
-
-    error = compute_lib_image2d_init(&(fimd_gpu_inst->image_in), 0);
+    
+    error = compute_lib_ssbo_init(&(fimd_gpu_inst->image_in_ssbo), NULL, (GLint) image_width * image_height);
     if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to init image2d '%s'!\r\n", fimd_gpu_inst->image_in.resource.name);
+        fprintf(stderr, "ERROR: Failed to init ssbo '%s'!\r\n", fimd_gpu_inst->image_in_ssbo.resource.name);
         compute_lib_error_queue_flush(&fimd_gpu_inst->compute_lib, stderr);
         fimd_gpu_destroy(handle);
         return NULL;
@@ -243,9 +244,7 @@ unsigned fimd_gpu_detect(fimd_gpu_t* handle, unsigned char* image, unsigned mark
 {
     struct fimd_gpu_inst_s* fimd_gpu_inst = (struct fimd_gpu_inst_s*) handle->inst_handle;
 
-    int size = fimd_gpu_inst->image_in.width * fimd_gpu_inst->image_in.height;
-    uint8_t *rgba8ui = calloc(4 * size, sizeof(uint8_t));
-    for (int i = 0; i < size; i++) { rgba8ui[4 * i] = image[i]; }
+    int size = handle->config.image_width * handle->config.image_height;
 
     unsigned error = 0;
     uint32_t markers_raw[handle->config.max_markers_count];
@@ -273,17 +272,16 @@ unsigned fimd_gpu_detect(fimd_gpu_t* handle, unsigned char* image, unsigned mark
         compute_lib_error_queue_flush(&((struct fimd_gpu_inst_s *) handle->inst_handle)->compute_lib, stderr);
         goto detect_end;
     }
-
-    // write input image data
-    error = compute_lib_image2d_write(&fimd_gpu_inst->image_in, rgba8ui);
+    
+    error = compute_lib_ssbo_write(&fimd_gpu_inst->image_in_ssbo, image, (GLint) size / 4);
     if (error != GL_NO_ERROR) {
-        fprintf(stderr, "ERROR: Failed to write image data to image2d! Code: %d\r\n", error);
+        fprintf(stderr, "ERROR: Failed to write image data to ssbo! Code: %d\r\n", error);
         compute_lib_error_queue_flush(&((struct fimd_gpu_inst_s *) handle->inst_handle)->compute_lib, stderr);
         goto detect_end;
     }
 
     // dispatch compute shader
-    error = compute_lib_program_dispatch(&fimd_gpu_inst->compute_prog, fimd_gpu_inst->image_in.width, fimd_gpu_inst->image_in.height, 1);
+    error = compute_lib_program_dispatch(&fimd_gpu_inst->compute_prog, handle->config.image_width, handle->config.image_height, 1);
     if (error != GL_NO_ERROR) {
         fprintf(stderr, "ERROR: Failed to dispatch compute shader! Code: %d\r\n", error);
         compute_lib_error_queue_flush(&((struct fimd_gpu_inst_s *) handle->inst_handle)->compute_lib, stderr);
@@ -332,16 +330,16 @@ unsigned fimd_gpu_detect(fimd_gpu_t* handle, unsigned char* image, unsigned mark
     }
 
 detect_end:
-    free(rgba8ui);
     return error;
 }
 
 void fimd_gpu_destroy(fimd_gpu_t* handle)
 {
     struct fimd_gpu_inst_s* fimd_gpu_inst = (struct fimd_gpu_inst_s*) handle->inst_handle;
-    compute_lib_image2d_destroy(&(fimd_gpu_inst->image_in));
+    compute_lib_ssbo_destroy(&(fimd_gpu_inst->image_in_ssbo));
     compute_lib_acbo_destroy(&(fimd_gpu_inst->markers_count_acbo));
     compute_lib_acbo_destroy(&(fimd_gpu_inst->sun_pts_count_acbo));
+    compute_lib_ssbo_destroy(&(fimd_gpu_inst->configuration_ssbo));
     compute_lib_ssbo_destroy(&(fimd_gpu_inst->markers_ssbo));
     compute_lib_ssbo_destroy(&(fimd_gpu_inst->sun_pts_ssbo));
     compute_lib_program_destroy(&(fimd_gpu_inst->compute_prog), GL_TRUE);
