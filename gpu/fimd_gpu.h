@@ -63,6 +63,57 @@ unsigned fimd_gpu_detect(fimd_gpu_t* handle, unsigned char* image, unsigned mark
  * \param handle Pointer to the FIMD-GPU instance.
  */
 void fimd_gpu_destroy(fimd_gpu_t* handle);
+/**
+ * \brief Sets the image width for the FIMD-GPU instance.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param image_width New image width.
+ */
+void fimd_gpu_set_image_width(fimd_gpu_t* handle, unsigned image_width);
+
+/**
+ * \brief Sets the image height for the FIMD-GPU instance.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param image_height New image height.
+ */
+void fimd_gpu_set_image_height(fimd_gpu_t* handle, unsigned image_height);
+
+/**
+ * \brief Sets the threshold for marker detection.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param threshold New threshold value.
+ */
+void fimd_gpu_set_threshold(fimd_gpu_t* handle, unsigned threshold);
+/**
+ * \brief Sets the threshold difference for marker detection.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param threshold_diff New threshold difference value.
+ */
+void fimd_gpu_set_threshold_diff(fimd_gpu_t* handle, unsigned threshold_diff);
+/**
+ * \brief Sets the threshold for sun point detection.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param threshold_sun New threshold value for sun point detection.
+ */
+void fimd_gpu_set_threshold_sun(fimd_gpu_t* handle, unsigned threshold_sun);
+/**
+ * \brief Sets the maximum number of markers to detect.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param max_markers_count New maximum number of markers.
+ */
+void fimd_gpu_set_max_markers_count(fimd_gpu_t* handle, unsigned max_markers_count);
+/**
+ * \brief Sets the maximum number of sun points to detect.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param max_sun_pts_count New maximum number of sun points.
+ */
+void fimd_gpu_set_max_sun_pts_count(fimd_gpu_t* handle, unsigned max_sun_pts_count);
+/**
+ * \brief Sets the radii for marker detection.
+ * \param handle Pointer to the FIMD-GPU instance.
+ * \param radii_count Number of radii.
+ * \param radii Array of radii values.
+ */
+void fimd_gpu_set_radii(fimd_gpu_t* handle, unsigned radii_count, unsigned* radii);
 
 
 #endif

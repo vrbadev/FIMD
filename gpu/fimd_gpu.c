@@ -348,3 +348,39 @@ void fimd_gpu_destroy(fimd_gpu_t* handle)
     free(handle);
 }
 
+
+void fimd_gpu_set_image_width(fimd_gpu_t* handle, unsigned image_width)
+{
+    handle->config.image_width = image_width;
+}
+void fimd_gpu_set_image_height(fimd_gpu_t* handle, unsigned image_height)
+{
+    handle->config.image_height = image_height;
+}
+void fimd_gpu_set_threshold(fimd_gpu_t* handle, unsigned threshold)
+{
+    handle->config.threshold = threshold;
+}
+void fimd_gpu_set_threshold_diff(fimd_gpu_t* handle, unsigned threshold_diff)
+{
+    handle->config.threshold_diff = threshold_diff;
+}
+void fimd_gpu_set_threshold_sun(fimd_gpu_t* handle, unsigned threshold_sun)
+{
+    handle->config.threshold_sun = threshold_sun;
+}
+void fimd_gpu_set_max_markers_count(fimd_gpu_t* handle, unsigned max_markers_count)
+{
+    handle->config.max_markers_count = max_markers_count;
+}
+void fimd_gpu_set_max_sun_pts_count(fimd_gpu_t* handle, unsigned max_sun_pts_count)
+{
+    handle->config.max_sun_pts_count = max_sun_pts_count;
+}
+void fimd_gpu_set_radii(fimd_gpu_t* handle, unsigned radii_count, unsigned* radii)
+{
+    handle->config.radii_count = radii_count;
+    for (unsigned i = 0; i < handle->config.radii_count; i++) {
+        handle->config.radii[i] = radii[i];
+    }
+}

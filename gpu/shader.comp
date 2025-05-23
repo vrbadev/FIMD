@@ -164,7 +164,6 @@ void main()
     
     uint index;
     int i, radius;
-    bool detected = false;
     if (center_val >= int(config_threshold)) {
         for (i = 0; i < int(config_radii_count); i++) {
             radius = int(configuration[8 + i]);
@@ -174,18 +173,15 @@ void main()
                     index = atomicCounterIncrement(markers_count);
                     if (index >= uint(config_max_markers_count)) { return; }
                     markers[index] = ((uint(center_pos.x) & uint(0x0000FFFF)) << 16) | (uint(center_pos.y) & uint(0x0000FFFF));
-                    detected = true;
-                    break;
+                    return;
                 case FIMD_RESULT_SUN:
                     index = atomicCounterIncrement(sun_pts_count);
                     if (index >= uint(config_max_sun_pts_count)) { return; }
                     sun_pts[index] = ((uint(center_pos.x) & uint(0x0000FFFF)) << 16) | (uint(center_pos.y) & uint(0x0000FFFF));
-                    detected = true;
-                    break;
+                    return;
                 case FIMD_RESULT_NONE:
                     break;
             }
-            if (detected) { break; }
         }
     }
 }
